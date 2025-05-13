@@ -54,14 +54,39 @@ function delete_by_id($table,$id)
 /*--------------------------------------------------------------*/
 /* Función para contar IDs por nombre de tabla
 /*--------------------------------------------------------------*/
-
 function count_by_id($table){
   global $db;
   if(tableExists($table))
   {
-    $sql    = "SELECT COUNT(id) AS total FROM ".$db->escape($table);
+    // Definir el nombre de la columna ID según la tabla
+    $id_column = 'id'; // valor por defecto
+    switch($table) {
+      case 'clientes':
+        $id_column = 'Id_Cliente';
+        break;
+      case 'productos':
+        $id_column = 'Id_Productos';
+        break;
+      case 'venta':
+        $id_column = 'Folio';
+        break;
+      case 'servicio':
+        $id_column = 'Id_Servicio';
+        break;
+      case 'users':
+        $id_column = 'id';
+        break;
+      case 'user_groups':
+        $id_column = 'id';
+        break;
+      case 'media':
+        $id_column = 'id';
+        break;
+    }
+
+    $sql = "SELECT COUNT({$id_column}) AS total FROM ".$db->escape($table);
     $result = $db->query($sql);
-     return($db->fetch_assoc($result));
+    return($db->fetch_assoc($result));
   }
 }
 /*--------------------------------------------------------------*/
