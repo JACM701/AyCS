@@ -1,0 +1,13 @@
+Admistrador
+Usuario: admin
+Contraseña: admin
+
+Usuario especial
+Usuario: special
+Contraseña: special
+
+Usuario por defecto
+Usuario:user
+Contraseña: user
+
+por el momento usando xampp ejecutar manualmente el puerto junto SDI/index.php
