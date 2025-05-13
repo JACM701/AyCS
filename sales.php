@@ -7,8 +7,16 @@
   page_require_level(3);
 ?>
 <?php
-// Obtener todas las ventas de la base de datos
-$sales = find_all_sale();
+// Obtener todas las ventas con información relacionada
+$sql = "SELECT v.*, c.Nombre as ClienteNombre, c.Apellido as ClienteApellido, 
+        p.Nombre as ProductoNombre, s.Nombre as ServicioNombre, s.Costo as ServicioCosto,
+        p.Costo as ProductoCosto
+        FROM venta v
+        LEFT JOIN clientes c ON v.Id_Cliente = c.Id_Cliente
+        LEFT JOIN productos p ON v.Id_Productos = p.Id_Productos
+        LEFT JOIN servicio s ON v.Id_Servicio = s.Id_Servicio
+        ORDER BY v.Fecha DESC";
+$sales = find_by_sql($sql);
 ?>
 <?php include_once('layouts/header.php'); ?>
 <!-- Sección de mensajes -->
@@ -25,7 +33,7 @@ $sales = find_all_sale();
       <div class="panel-heading clearfix">
         <strong>
           <span class="glyphicon glyphicon-th"></span>
-          <span>Todas la ventas</span>
+          <span>Todas las ventas</span>
         </strong>
         <div class="pull-right">
           <a href="add_sale.php" class="btn btn-primary">Agregar venta</a>
@@ -38,12 +46,13 @@ $sales = find_all_sale();
           <thead>
             <tr>
               <th class="text-center" style="width: 50px;">#</th>
-              <th> Nombre del producto </th>
-              <th class="text-center" style="width: 15%;"> Cantidad</th>
-              <th class="text-center" style="width: 15%;"> Total </th>
-              <th class="text-center" style="width: 15%;"> Fecha </th>
-              <th class="text-center" style="width: 100px;"> Acciones </th>
-             </tr>
+              <th>Cliente</th>
+              <th>Producto</th>
+              <th>Servicio</th>
+              <th class="text-center" style="width: 15%;">Total</th>
+              <th class="text-center" style="width: 15%;">Fecha</th>
+              <th class="text-center" style="width: 100px;">Acciones</th>
+            </tr>
           </thead>
           <!-- Cuerpo de la tabla con los datos de ventas -->
           <tbody>
@@ -51,6 +60,9 @@ $sales = find_all_sale();
              <tr>
                <!-- Número de registro -->
                <td class="text-center"><?php echo count_id();?></td>
+               <!-- Nombre del cliente -->
+               <td><?php echo remove_junk($sale['ClienteNombre'] . ' ' . $sale['ClienteApellido']); ?></td>
+               <!-- Nombre del producto -->
                <!-- Nombre del producto (limpio de caracteres especiales) -->
                <td><?php echo remove_junk($sale['name']); ?></td>
                <!-- Cantidad vendida -->

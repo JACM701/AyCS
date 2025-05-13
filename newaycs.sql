@@ -105,13 +105,27 @@ CREATE TABLE `productos` (
   `Descripcion` varchar(500) NOT NULL,
   `Costo` decimal(10,2) NOT NULL,
   `Foto` varchar(500) DEFAULT NULL,
-  PRIMARY KEY (`Id_Productos`)
+  `Categoria` int(11) UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`Id_Productos`),
+  KEY `Categoria` (`Categoria`),
+  CONSTRAINT `productos_ibfk_1` FOREIGN KEY (`Categoria`) REFERENCES `categories` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `productos`
 --
+
+-- Estructura de tabla para la tabla `categories`
+--
+
+CREATE TABLE `categories` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `name` varchar(60) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+
 
 LOCK TABLES `productos` WRITE;
 /*!40000 ALTER TABLE `productos` DISABLE KEYS */;
@@ -165,6 +179,65 @@ CREATE TABLE `venta` (
   CONSTRAINT `venta_ibfk_3` FOREIGN KEY (`Id_Productos`) REFERENCES `productos` (`Id_Productos`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Estructura de tabla para la tabla `users`
+--
+
+CREATE TABLE `users` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `name` varchar(60) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `user_level` int(11) NOT NULL,
+  `image` varchar(255) DEFAULT 'no_image.jpg',
+  `status` int(1) NOT NULL,
+  `last_login` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Volcado de datos para la tabla `users`
+--
+
+INSERT INTO `users` (`id`, `name`, `username`, `password`, `user_level`, `image`, `status`, `last_login`) VALUES
+(1, 'Admin Users', 'admin', 'd033e22ae348aeb5660fc2140aec35850c4da997', 1, 'pzg9wa7o1.jpg', 1, '2020-06-16 07:11:11'),
+(2, 'Special User', 'special', 'ba36b97a41e7faf742ab09bf88405ac04f99599a', 2, 'no_image.jpg', 1, '2025-06-45 07:11:26'),
+(3, 'Default User', 'user', '12dea96fec20593566ab75692c9949596833adc9', 3, 'no_image.jpg', 1, '2023-06-17 07:11:03');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `user_groups`
+--
+
+CREATE TABLE `user_groups` (
+  `id` int(11) NOT NULL,
+  `group_name` varchar(150) NOT NULL,
+  `group_level` int(11) NOT NULL,
+  `group_status` int(1) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Volcado de datos para la tabla `user_groups`
+--
+
+INSERT INTO `user_groups` (`id`, `group_name`, `group_level`, `group_status`) VALUES
+(1, 'Admin', 1, 1),
+(2, 'Special', 2, 0),
+(3, 'User', 3, 1);
+
+--
+-- Estructura de tabla para la tabla `media`
+--
+
+CREATE TABLE `media` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `file_name` varchar(255) NOT NULL,
+  `file_type` varchar(100) NOT NULL,
+  `description` varchar(255) DEFAULT NULL,
+  `date` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `venta`

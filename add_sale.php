@@ -7,33 +7,37 @@
 <?php
 
   if(isset($_POST['add_sale'])){
-    $req_fields = array('s_id','quantity','price','total', 'date' );
+    $req_fields = array('cliente_id', 'producto_id', 'servicio_id', 'fecha');
     validate_fields($req_fields);
-        if(empty($errors)){
-          $p_id      = $db->escape((int)$_POST['s_id']);
-          $s_qty     = $db->escape((int)$_POST['quantity']);
-          $s_total   = $db->escape($_POST['total']);
-          $date      = $db->escape($_POST['date']);
-          $s_date    = make_date();
+    
+    if(empty($errors)){
+      $cliente_id = $db->escape((int)$_POST['cliente_id']);
+      $producto_id = $db->escape((int)$_POST['producto_id']);
+      $servicio_id = $db->escape((int)$_POST['servicio_id']);
+      $fecha = $db->escape($_POST['fecha']);
 
-          $sql  = "INSERT INTO sales (";
-          $sql .= " product_id,qty,price,date";
-          $sql .= ") VALUES (";
-          $sql .= "'{$p_id}','{$s_qty}','{$s_total}','{$s_date}'";
-          $sql .= ")";
+      $sql = "INSERT INTO venta (";
+      $sql .= "Id_Cliente, Id_Productos, Id_Servicio, Fecha";
+      $sql .= ") VALUES (";
+      $sql .= "'{$cliente_id}', '{$producto_id}', '{$servicio_id}', '{$fecha}'";
+      $sql .= ")";
 
-                if($db->query($sql)){
-                  update_product_qty($s_qty,$p_id);
-                  $session->msg('s',"Venta agregada ");
-                  redirect('add_sale.php', false);
-                } else {
-                  $session->msg('d','Lo siento, registro falló.');
-                  redirect('add_sale.php', false);
-                }
-        } else {
-           $session->msg("d", $errors);
-           redirect('add_sale.php',false);
+      if($db->query($sql)){
+        // Actualizar inventario
+        if($producto_id > 0) {
+          $sql_inv = "UPDATE inventario SET Cantidad = Cantidad - 1 WHERE Id_Producto = '{$producto_id}'";
+          $db->query($sql_inv);
         }
+        $session->msg('s',"Venta agregada exitosamente");
+        redirect('add_sale.php', false);
+      } else {
+        $session->msg('d','Lo siento, registro falló.');
+        redirect('add_sale.php', false);
+      }
+    } else {
+      $session->msg("d", $errors);
+      redirect('add_sale.php',false);
+    }
   }
 
 ?>
@@ -41,47 +45,72 @@
 <div class="row">
   <div class="col-md-6">
     <?php echo display_msg($msg); ?>
-    <form method="post" action="ajax.php" autocomplete="off" id="sug-form">
-        <div class="form-group">
-          <div class="input-group">
-            <span class="input-group-btn">
-              <button type="submit" class="btn btn-primary">Búsqueda</button>
-            </span>
-            <input type="text" id="sug_input" class="form-control" name="title"  placeholder="Buscar por el nombre del producto">
-         </div>
-         <div id="result" class="list-group"></div>
-        </div>
-    </form>
   </div>
 </div>
-<div class="row">
 
+<div class="row">
   <div class="col-md-12">
     <div class="panel panel-default">
       <div class="panel-heading clearfix">
         <strong>
           <span class="glyphicon glyphicon-th"></span>
-          <span>Editar venta</span>
-       </strong>
+          <span>Nueva Venta</span>
+        </strong>
       </div>
       <div class="panel-body">
         <form method="post" action="add_sale.php">
-         <table class="table table-bordered">
-           <thead>
-            <th> Producto </th>
-            <th> Precio </th>
-            <th> Cantidad </th>
-            <th> Total </th>
-            <th> Agregado</th>
-            <th> Acciones</th>
-           </thead>
-             <tbody  id="product_info"> </tbody>
-         </table>
-       </form>
+          <div class="form-group">
+            <label>Cliente</label>
+            <select class="form-control" name="cliente_id" required>
+              <option value="">Seleccione un cliente</option>
+              <?php 
+              $clientes = find_all('clientes');
+              foreach($clientes as $cliente): ?>
+                <option value="<?php echo $cliente['Id_Cliente']; ?>">
+                  <?php echo $cliente['Nombre'] . ' ' . $cliente['Apellido']; ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Producto</label>
+            <select class="form-control" name="producto_id">
+              <option value="">Seleccione un producto (opcional)</option>
+              <?php 
+              $productos = find_all('productos');
+              foreach($productos as $producto): ?>
+                <option value="<?php echo $producto['Id_Productos']; ?>">
+                  <?php echo $producto['Nombre']; ?> - $<?php echo $producto['Costo']; ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Servicio</label>
+            <select class="form-control" name="servicio_id">
+              <option value="">Seleccione un servicio (opcional)</option>
+              <?php 
+              $servicios = find_all('servicio');
+              foreach($servicios as $servicio): ?>
+                <option value="<?php echo $servicio['Id_Servicio']; ?>">
+                  <?php echo $servicio['Nombre']; ?> - $<?php echo $servicio['Costo']; ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Fecha</label>
+            <input type="date" class="form-control" name="fecha" required>
+          </div>
+
+          <button type="submit" name="add_sale" class="btn btn-primary">Registrar Venta</button>
+        </form>
       </div>
     </div>
   </div>
-
 </div>
 
 <?php include_once('layouts/footer.php'); ?>

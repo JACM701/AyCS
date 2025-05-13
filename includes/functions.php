@@ -148,4 +148,39 @@ function randString($length = 5)
   return $str;
 }
 
+function upload_image($file, $target_dir) {
+  if(!is_dir($target_dir)){
+    mkdir($target_dir, 0777, true);
+  }
+  
+  $target_file = $target_dir . basename($file["name"]);
+  $imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
+  
+  // Verificar si es una imagen real
+  $check = getimagesize($file["tmp_name"]);
+  if($check === false) {
+    return '';
+  }
+  
+  // Verificar el tamaño del archivo (5MB máximo)
+  if ($file["size"] > 5000000) {
+    return '';
+  }
+  
+  // Permitir ciertos formatos
+  if($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg" && $imageFileType != "gif" ) {
+    return '';
+  }
+  
+  // Generar nombre único
+  $new_filename = uniqid() . '.' . $imageFileType;
+  $target_file = $target_dir . $new_filename;
+  
+  if (move_uploaded_file($file["tmp_name"], $target_file)) {
+    return $new_filename;
+  } else {
+    return '';
+  }
+}
+
 ?>
