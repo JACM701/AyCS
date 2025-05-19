@@ -6,7 +6,7 @@
 
 <div class="login-page">
     <div class="text-center">
-       <h1>Welcome</h1>
+       <h1>Bienvenido</h1>
        <p>Sign in to start your session</p>
      </div>
      <?php echo display_msg($msg); ?>
