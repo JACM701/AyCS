@@ -1,30 +1,25 @@
 <ul>
   <li>
-    <a href="home.php">
+    <a href="special_dashboard.php">
       <i class="glyphicon glyphicon-home"></i>
-      <span>Panel de control</span>
-    </a>
-  </li>
-  <li>
-    <a href="categorie.php" >
-      <i class="glyphicon glyphicon-indent-left"></i>
-      <span>Categorías</span>
+      <span>Inicio</span>
     </a>
   </li>
   <li>
     <a href="#" class="submenu-toggle">
       <i class="glyphicon glyphicon-th-large"></i>
-      <span>Productos</span>
+      <span>Inventario</span>
     </a>
     <ul class="nav submenu">
-       <li><a href="product.php">Administrar productos</a> </li>
-       <li><a href="add_product.php">Agregar producto</a> </li>
-   </ul>
+      <li><a href="product.php">Ver productos</a></li>
+      <li><a href="add_product.php">Agregar producto</a></li>
+      <li><a href="media.php">Galería</a></li>
+    </ul>
   </li>
   <li>
-    <a href="media.php" >
-      <i class="glyphicon glyphicon-picture"></i>
-      <span>Media</span>
+    <a href="profile.php?id=<?php echo (int)$user['id']; ?>">
+      <i class="glyphicon glyphicon-user"></i>
+      <span>Mi Perfil</span>
     </a>
   </li>
 </ul>
