@@ -9,6 +9,12 @@
   $photo = new Media();
   $user_id = (int)$_POST['user_id'];
   $photo->upload($_FILES['file_upload']);
+  
+  // Agregar depuración
+  error_log("Ruta de usuario: " . $photo->userPath);
+  error_log("Nombre de archivo: " . $photo->fileName);
+  error_log("Ruta temporal: " . $photo->fileTempPath);
+  
   if($photo->process_user($user_id)){
     $session->msg('s','La foto fue subida al servidor.');
     redirect('edit_account.php');

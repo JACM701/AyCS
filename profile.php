@@ -21,7 +21,7 @@
   $banner_image = 'libs/images/default-banner.jpg';
 
   // Obtener configuración del banner si es admin
-  if($user['user_level'] === '1') {
+  if(isset($user) && $user['user_level'] === '1') {
     // Verificar si la tabla settings existe
     $table_exists = $db->query("SHOW TABLES LIKE 'settings'");
     if($db->num_rows($table_exists) > 0) {
@@ -52,7 +52,10 @@
        </div>
    </div>
 
-   <?php if($user['user_level'] === '1'): ?>
+   <?php 
+    // Obtener configuración del banner si es admin
+    if(isset($user) && $user['user_level'] === '1'):
+   ?>
    <div class="col-md-8">
      <div class="panel panel-default">
        <div class="panel-heading">
@@ -96,4 +99,5 @@
    </div>
    <?php endif; ?>
 </div>
+
 <?php include_once('layouts/footer.php'); ?>

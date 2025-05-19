@@ -35,12 +35,13 @@
   </li>
   <li>
     <a href="#" class="submenu-toggle">
-      <i class="glyphicon glyphicon-shopping-cart"></i>
-      <span>Ventas</span>
+      <i class="glyphicon glyphicon-list-alt"></i>
+      <span>Transacciones</span>
     </a>
     <ul class="nav submenu">
       <li><a href="sales.php">Registro de ventas</a></li>
       <li><a href="add_sale.php">Nueva venta</a></li>
+      <li><a href="quotes.php">Cotizaciones</a></li>
     </ul>
   </li>
   <li>

@@ -23,6 +23,17 @@
           $banner_image = 'libs/images/default-banner.jpg';
       }
   }
+
+  // Obtener datos para actividad reciente (últimas 5 ventas)
+  $sql_ventas_recientes = "SELECT v.*, c.Nombre as ClienteNombre, c.Apellido as ClienteApellido,
+                          p.Nombre as ProductoNombre, s.Nombre as ServicioNombre, s.Costo as ServicioCosto,
+                          p.Costo as ProductoCosto
+                          FROM venta v
+                          LEFT JOIN clientes c ON v.Id_Cliente = c.Id_Cliente
+                          LEFT JOIN productos p ON v.Id_Productos = p.Id_Productos
+                          LEFT JOIN servicio s ON v.Id_Servicio = s.Id_Servicio
+                          ORDER BY v.Fecha DESC LIMIT 5";
+  $recent_activity = find_by_sql($sql_ventas_recientes);
 ?>
 <?php include_once('layouts/header.php'); ?>
 
@@ -81,21 +92,41 @@
       <div class="panel-heading">
         <strong>
           <span class="glyphicon glyphicon-time"></span>
-          <span>Actividad Reciente</span>
+          <span>Actividad Reciente (Últimas Ventas)</span>
         </strong>
       </div>
       <div class="panel-body">
         <div class="activity-list">
-          <!-- Aquí irá el contenido dinámico de actividad reciente -->
-          <div class="activity-item">
-            <i class="glyphicon glyphicon-shopping-cart"></i>
-            <div class="activity-content">
-              <h4>Nueva Venta Realizada</h4>
-              <p>Se ha registrado una nueva venta</p>
-              <small>Hace 5 minutos</small>
+          <?php if ($recent_activity): ?>
+            <?php foreach ($recent_activity as $activity): ?>
+              <div class="activity-item">
+                <i class="glyphicon glyphicon-shopping-cart"></i>
+                <div class="activity-content">
+                  <h4>Nueva Venta: #<?php echo remove_junk($activity['Folio']); ?></h4>
+                  <p>Cliente: <?php echo remove_junk($activity['ClienteNombre'] . ' ' . $activity['ClienteApellido']); ?></p>
+                  <p>
+                    <?php
+                      $items = [];
+                      if ($activity['ProductoNombre']) {
+                          $items[] = remove_junk($activity['ProductoNombre']);
+                      }
+                      if ($activity['ServicioNombre']) {
+                          $items[] = remove_junk($activity['ServicioNombre']);
+                      }
+                      echo 'Artículos/Servicios: ' . (empty($items) ? 'Ninguno' : implode(', ', $items));
+                    ?>
+                  </p>
+                  <small>Fecha: <?php echo read_date($activity['Fecha']); ?></small>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          <?php else: ?>
+            <div class="activity-item">
+              <div class="activity-content">
+                <h4>No hay actividad reciente.</h4>
+              </div>
             </div>
-          </div>
-          <!-- Más items de actividad... -->
+          <?php endif; ?>
         </div>
       </div>
     </div>

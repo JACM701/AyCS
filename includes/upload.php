@@ -7,8 +7,8 @@ class  Media {
   public $fileType;
   public $fileTempPath;
   //Establecer destino para la carga
-  public $userPath = SITE_ROOT.DS.'..'.DS.'uploads/users';
-  public $productPath = SITE_ROOT.DS.'..'.DS.'uploads/products';
+  public $userPath = SITE_ROOT.DS.'uploads'.DS.'users';
+  public $productPath = SITE_ROOT.DS.'uploads'.DS.'products';
 
 
   public $errors = array();
@@ -28,6 +28,27 @@ class  Media {
    'jpeg',
    'png',
   );
+  public function __construct() {
+    // Crear directorios si no existen
+    if(!is_dir($this->userPath)) {
+      if(!mkdir($this->userPath, 0777, true)) {
+        $this->errors[] = "No se pudo crear el directorio de usuarios";
+      }
+    }
+    if(!is_dir($this->productPath)) {
+      if(!mkdir($this->productPath, 0777, true)) {
+        $this->errors[] = "No se pudo crear el directorio de productos";
+      }
+    }
+    
+    // Verificar permisos
+    if(!is_writable($this->userPath)) {
+      chmod($this->userPath, 0777);
+    }
+    if(!is_writable($this->productPath)) {
+      chmod($this->productPath, 0777);
+    }
+  }
   public function file_ext($filename){
      $ext = strtolower(substr( $filename, strrpos( $filename, '.' ) + 1 ) );
      if(in_array($ext, $this->upload_extensions)){

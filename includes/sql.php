@@ -1,5 +1,9 @@
 <?php
-  require_once('includes/load.php');
+if (!defined('SITE_ROOT')) {
+    die('Acceso directo no permitido');
+}
+
+require_once('includes/load.php');
 
 /*--------------------------------------------------------------*/
 /* Función para encontrar todas las filas de una tabla por nombre

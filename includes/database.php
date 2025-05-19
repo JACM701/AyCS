@@ -1,6 +1,5 @@
 <?php
-// Incluir archivo de configuración
-require_once(LIB_PATH_INC.DS."config.php");
+require_once(__DIR__ . '/config.php');
 
 /**
  * Clase para manejar la conexión y operaciones con la base de datos MySQL
@@ -14,7 +13,7 @@ class MySqli_DB {
      * Constructor de la clase - Inicia la conexión a la base de datos
      */
     function __construct() {
-      $this->db_connect();
+        $this->db_connect();
     }
 
     /**
@@ -23,17 +22,19 @@ class MySqli_DB {
      */
     public function db_connect()
     {
-      $this->con = mysqli_connect(DB_HOST,DB_USER,DB_PASS);
-      if(!$this->con)
-             {
-               die(" Error en la conexión a la base de datos:". mysqli_connect_error());
-             } else {
-               $select_db = $this->con->select_db(DB_NAME);
-                 if(!$select_db)
-                 {
-                   die("Error al seleccionar la base de datos". mysqli_connect_error());
-                 }
-             }
+        try {
+            $this->con = mysqli_connect(DB_HOST, DB_USER, DB_PASS);
+            if(!$this->con) {
+                throw new Exception("Error de conexión: " . mysqli_connect_error());
+            }
+            
+            $select_db = $this->con->select_db(DB_NAME);
+            if(!$select_db) {
+                throw new Exception("Error al seleccionar la base de datos: " . mysqli_error($this->con));
+            }
+        } catch (Exception $e) {
+            die("Error de base de datos: " . $e->getMessage());
+        }
     }
 
     /**
@@ -42,11 +43,11 @@ class MySqli_DB {
      */
     public function db_disconnect()
     {
-      if(isset($this->con))
-      {
-        mysqli_close($this->con);
-        unset($this->con);
-      }
+        if(isset($this->con))
+        {
+            mysqli_close($this->con);
+            unset($this->con);
+        }
     }
 
     /**
@@ -55,18 +56,15 @@ class MySqli_DB {
      * @return mixed Resultado de la consulta
      */
     public function query($sql)
-       {
-          if (trim($sql != "")) {
-              $this->query_id = $this->con->query($sql);
-          }
-          if (!$this->query_id)
-            // Solo para modo desarrollo
-                  die("Error en esta consulta :<pre> " . $sql ."</pre>");
-           // Para modo producción
-            //  die("Error en la consulta");
-
-           return $this->query_id;
-       }
+    {
+        if (trim($sql != "")) {
+            $this->query_id = $this->con->query($sql);
+        }
+        if (!$this->query_id) {
+            die("Error en la consulta: " . mysqli_error($this->con) . "<br>SQL: " . $sql);
+        }
+        return $this->query_id;
+    }
 
     /**
      * Funciones auxiliares para manejar resultados de consultas
@@ -77,7 +75,7 @@ class MySqli_DB {
      */
     public function fetch_array($statement)
     {
-      return mysqli_fetch_array($statement);
+        return mysqli_fetch_array($statement);
     }
 
     /**
@@ -85,7 +83,7 @@ class MySqli_DB {
      */
     public function fetch_object($statement)
     {
-      return mysqli_fetch_object($statement);
+        return mysqli_fetch_object($statement);
     }
 
     /**
@@ -93,7 +91,7 @@ class MySqli_DB {
      */
     public function fetch_assoc($statement)
     {
-      return mysqli_fetch_assoc($statement);
+        return mysqli_fetch_assoc($statement);
     }
 
     /**
@@ -101,7 +99,7 @@ class MySqli_DB {
      */
     public function num_rows($statement)
     {
-      return mysqli_num_rows($statement);
+        return mysqli_num_rows($statement);
     }
 
     /**
@@ -109,7 +107,7 @@ class MySqli_DB {
      */
     public function insert_id()
     {
-      return mysqli_insert_id($this->con);
+        return mysqli_insert_id($this->con);
     }
 
     /**
@@ -117,7 +115,7 @@ class MySqli_DB {
      */
     public function affected_rows()
     {
-      return mysqli_affected_rows($this->con);
+        return mysqli_affected_rows($this->con);
     }
 
     /**
@@ -127,8 +125,8 @@ class MySqli_DB {
      * @return string Cadena escapada
      */
     public function escape($str){
-       return $this->con->real_escape_string($str);
-     }
+        return $this->con->real_escape_string($str);
+    }
 
     /**
      * Función para procesar resultados en un bucle while
@@ -136,12 +134,11 @@ class MySqli_DB {
      * @return array Array con todos los resultados
      */
     public function while_loop($loop){
-     global $db;
-       $results = array();
-       while ($result = $this->fetch_array($loop)) {
-          $results[] = $result;
-       }
-     return $results;
+        $results = array();
+        while ($result = $this->fetch_array($loop)) {
+            $results[] = $result;
+        }
+        return $results;
     }
 }
 

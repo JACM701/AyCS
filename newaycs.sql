@@ -258,3 +258,68 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2025-05-12 17:57:56
+
+--
+-- Estructura de tabla para la tabla `quotes`
+--
+
+CREATE TABLE `quotes` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `client_id` int(11) NULL, -- Eliminado UNSIGNED para que coincida con clientes.Id_Cliente
+  `client_name` varchar(100) NOT NULL, -- Guardar nombre aunque sea cliente registrado, para historial
+  `client_phone` varchar(20) NULL,
+  `client_location` varchar(255) NULL,
+  `quote_date` date NOT NULL,
+  `quote_type` varchar(100) NULL,
+  `subtotal` decimal(25,2) DEFAULT '0.00',
+  `discount_percentage` decimal(5,2) DEFAULT '0.00',
+  `total_amount` decimal(25,2) DEFAULT '0.00',
+  `observations` text NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`client_id`) REFERENCES `clientes`(`Id_Cliente`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+--CAMBIOS DEL DIA 19 DE MAYO DEL 2025 AGREGUE LO DE COTIZACIÓN Y PERSONZALIZAR PERFIL DEL INICIO
+-- Estructura de tabla para la tabla `quote_items`
+--
+
+CREATE TABLE `quote_items` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `quote_id` int(11) UNSIGNED NOT NULL,
+  `product_id` int(11) NULL, -- Eliminado UNSIGNED para que coincida con productos.Id_Productos
+  `service_id` int(11) NULL, -- Eliminado UNSIGNED para que coincida con servicio.Id_Servicio
+  `description` varchar(255) NOT NULL, -- Descripción del ítem (puede sobrescribir producto/servicio)
+  `quantity` int(11) NOT NULL DEFAULT '1',
+  `unit_price` decimal(25,2) NOT NULL,
+  `total_price` decimal(25,2) NOT NULL, -- Cantidad * Precio Unitario
+  `image` varchar(255) NULL, -- Ruta a la imagen ilustrativa
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`quote_id`) REFERENCES `quotes`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (`product_id`) REFERENCES `productos`(`Id_Productos`) ON DELETE SET NULL ON UPDATE CASCADE,
+  FOREIGN KEY (`service_id`) REFERENCES `servicio`(`Id_Servicio`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Estructura de tabla para la tabla `settings`
+--
+
+CREATE TABLE IF NOT EXISTS `settings` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `banner_title` varchar(255) DEFAULT 'Bienvenido al Sistema',
+  `banner_text` text DEFAULT 'Sistema de Gestión de Inventario',
+  `banner_image` varchar(255) DEFAULT 'libs/images/default-banner.jpg',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `settings`
+--
+
+INSERT INTO settings (banner_title, banner_text, banner_image)
+SELECT 'Bienvenido al Sistema', 'Sistema de Gestión de Inventario', 'libs/images/default-banner.jpg'
+WHERE NOT EXISTS (SELECT 1 FROM settings WHERE id = 1);
