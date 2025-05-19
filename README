@@ -11,3 +11,17 @@ Usuario:user
 Contraseña: user
 
 por el momento usando xampp ejecutar manualmente el puerto junto SDI/index.php
+
+
+Agregado
+CREATE TABLE proveedores (
+    Id_Proveedor INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    Número VARCHAR(20),
+    correo VARCHAR(100),
+    RFC VARCHAR(20)
+  
+);
+
+ ALTER TABLE Productos ADD COLUMN Id_Proveedor INT;
+ Alter table productos ADD FOREIGN KEY (Id_Proveedor) REFERENCES proveedores(Id_Proveedor);
