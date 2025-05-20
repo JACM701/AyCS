@@ -20,8 +20,12 @@ function real_escape($str){
  * @return string Cadena limpia
  */
 function remove_junk($str){
+  if($str === null) {
+    return '';
+  }
   $str = nl2br($str);
-  $str = htmlspecialchars(strip_tags($str, ENT_QUOTES));
+  $str = htmlspecialchars(strip_tags($str));
+  $str = trim($str);
   return $str;
 }
 

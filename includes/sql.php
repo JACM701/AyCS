@@ -33,7 +33,32 @@ function find_by_id($table,$id)
   global $db;
   $id = (int)$id;
     if(tableExists($table)){
-          $sql = $db->query("SELECT * FROM {$db->escape($table)} WHERE id='{$db->escape($id)}' LIMIT 1");
+          // Definir el nombre de la columna ID según la tabla
+          $id_column = 'id'; // valor por defecto
+          switch($table) {
+            case 'clientes':
+              $id_column = 'Id_Cliente';
+              break;
+            case 'productos':
+              $id_column = 'Id_Productos';
+              break;
+            case 'venta':
+              $id_column = 'Folio';
+              break;
+            case 'servicio':
+              $id_column = 'Id_Servicio';
+              break;
+            case 'users':
+              $id_column = 'id';
+              break;
+            case 'user_groups':
+              $id_column = 'id';
+              break;
+            case 'media':
+              $id_column = 'id';
+              break;
+          }
+          $sql = $db->query("SELECT * FROM {$db->escape($table)} WHERE {$id_column}='{$db->escape($id)}' LIMIT 1");
           if($result = $db->fetch_assoc($sql))
             return $result;
           else

@@ -2,146 +2,253 @@
   $page_title = 'Editar producto';
   require_once('includes/load.php');
   // Checkin What level user has permission to view this page
-   page_require_level(2);
+  page_require_level(2);
 ?>
 <?php
-$product = find_by_id('products',(int)$_GET['id']);
+$product = find_by_id('productos',(int)$_GET['id']);
 $all_categories = find_all('categories');
-$all_photo = find_all('media');
+
+// Obtener la cantidad del inventario
+$sql = "SELECT i.Cantidad FROM inventario i WHERE i.Id_Producto = '{$product['Id_Productos']}'";
+$inventory = find_by_sql($sql);
+$quantity = $inventory ? $inventory[0]['Cantidad'] : 0;
+
 if(!$product){
-  $session->msg("d","Missing product id.");
+  $session->msg("d","ID de producto no encontrado.");
   redirect('product.php');
 }
 ?>
 <?php
  if(isset($_POST['product'])){
-    $req_fields = array('product-title','product-categorie','product-quantity','buying-price', 'saleing-price' );
+    $req_fields = array('product-title','product-description','product-quantity','product-cost','product-categorie');
     validate_fields($req_fields);
 
    if(empty($errors)){
        $p_name  = remove_junk($db->escape($_POST['product-title']));
-       $p_cat   = (int)$_POST['product-categorie'];
+       $p_desc  = remove_junk($db->escape($_POST['product-description']));
        $p_qty   = remove_junk($db->escape($_POST['product-quantity']));
-       $p_buy   = remove_junk($db->escape($_POST['buying-price']));
-       $p_sale  = remove_junk($db->escape($_POST['saleing-price']));
-       if (is_null($_POST['product-photo']) || $_POST['product-photo'] === "") {
-         $media_id = '0';
-       } else {
-         $media_id = remove_junk($db->escape($_POST['product-photo']));
+       $p_cost  = remove_junk($db->escape($_POST['product-cost']));
+       $p_cat   = remove_junk($db->escape($_POST['product-categorie']));
+       
+       // Manejo de la imagen
+       $p_photo = $product['Foto'];
+       if(isset($_FILES['product-photo']) && $_FILES['product-photo']['size'] > 0){
+         $p_photo = upload_image($_FILES['product-photo'], 'uploads/products/');
        }
-       $query   = "UPDATE products SET";
-       $query  .=" name ='{$p_name}', quantity ='{$p_qty}',";
-       $query  .=" buy_price ='{$p_buy}', sale_price ='{$p_sale}', categorie_id ='{$p_cat}',media_id='{$media_id}'";
-       $query  .=" WHERE id ='{$product['id']}'";
-       $result = $db->query($query);
-               if($result && $db->affected_rows() === 1){
-                 $session->msg('s',"Producto ha sido actualizado. ");
-                 redirect('product.php', false);
-               } else {
-                 $session->msg('d',' Lo siento, actualización falló.');
-                 redirect('edit_product.php?id='.$product['id'], false);
-               }
 
+       $query   = "UPDATE productos SET";
+       $query  .=" Nombre ='{$p_name}', Descripcion ='{$p_desc}',";
+       $query  .=" Costo ='{$p_cost}', Foto ='{$p_photo}', Categoria ='{$p_cat}'";
+       $query  .=" WHERE Id_Productos ='{$product['Id_Productos']}'";
+       $result = $db->query($query);
+       
+       if($result && $db->affected_rows() === 1){
+         // Actualizar inventario
+         $query2 = "UPDATE inventario SET Cantidad ='{$p_qty}' WHERE Id_Producto ='{$product['Id_Productos']}'";
+         if($db->query($query2)){
+           $session->msg('s',"Producto actualizado exitosamente.");
+           redirect('product.php', false);
+         } else {
+           $session->msg('d',' Error al actualizar el inventario.');
+           redirect('edit_product.php?id='.$product['Id_Productos'], false);
+         }
+       } else {
+         $session->msg('d',' Lo siento, actualización falló.');
+         redirect('edit_product.php?id='.$product['Id_Productos'], false);
+       }
    } else{
        $session->msg("d", $errors);
-       redirect('edit_product.php?id='.$product['id'], false);
+       redirect('edit_product.php?id='.$product['Id_Productos'], false);
    }
-
  }
-
 ?>
 <?php include_once('layouts/header.php'); ?>
+
 <div class="row">
   <div class="col-md-12">
     <?php echo display_msg($msg); ?>
   </div>
 </div>
-  <div class="row">
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          <strong>
-            <span class="glyphicon glyphicon-th"></span>
-            <span>Editar producto</span>
-         </strong>
-        </div>
-        <div class="panel-body">
-         <div class="col-md-7">
-           <form method="post" action="edit_product.php?id=<?php echo (int)$product['id'] ?>">
+
+<div class="row">
+  <div class="col-md-12">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <strong>
+          <span class="glyphicon glyphicon-edit"></span>
+          <span>Editar Producto</span>
+        </strong>
+      </div>
+      <div class="panel-body">
+        <div class="row">
+          <div class="col-md-4">
+            <!-- Vista previa de la imagen -->
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <strong>Imagen del Producto</strong>
+              </div>
+              <div class="panel-body text-center">
+                <div class="product-image-preview">
+                  <?php if($product['Foto']): ?>
+                    <img src="uploads/products/<?php echo $product['Foto']; ?>" class="img-responsive img-thumbnail" id="image-preview" alt="Vista previa">
+                  <?php else: ?>
+                    <img src="uploads/products/no_image.jpg" class="img-responsive img-thumbnail" id="image-preview" alt="Sin imagen">
+                  <?php endif; ?>
+                </div>
+                <div class="form-group" style="margin-top: 15px;">
+                  <label for="product-photo" class="btn btn-primary">
+                    <i class="glyphicon glyphicon-camera"></i> Cambiar Imagen
+                  </label>
+                  <input type="file" name="product-photo" id="product-photo" style="display: none;" accept="image/*">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-8">
+            <form method="post" action="edit_product.php?id=<?php echo (int)$product['Id_Productos'] ?>" enctype="multipart/form-data">
               <div class="form-group">
+                <label for="product-title">Nombre del Producto</label>
                 <div class="input-group">
                   <span class="input-group-addon">
-                   <i class="glyphicon glyphicon-th-large"></i>
+                    <i class="glyphicon glyphicon-tag"></i>
                   </span>
-                  <input type="text" class="form-control" name="product-title" value="<?php echo remove_junk($product['name']);?>">
-               </div>
+                  <input type="text" class="form-control" name="product-title" value="<?php echo remove_junk($product['Nombre']);?>" required>
+                </div>
               </div>
+
               <div class="form-group">
-                <div class="row">
-                  <div class="col-md-6">
-                    <select class="form-control" name="product-categorie">
-                    <option value="">Selecciona una categoría</option>
-                   <?php  foreach ($all_categories as $cat): ?>
-                     <option value="<?php echo (int)$cat['id']; ?>" <?php if($product['categorie_id'] === $cat['id']): echo "selected"; endif; ?> >
-                       <?php echo remove_junk($cat['name']); ?></option>
-                   <?php endforeach; ?>
-                 </select>
+                <label for="product-description">Descripción</label>
+                <div class="input-group">
+                  <span class="input-group-addon">
+                    <i class="glyphicon glyphicon-align-left"></i>
+                  </span>
+                  <textarea class="form-control" name="product-description" rows="3" required><?php echo remove_junk($product['Descripcion']);?></textarea>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="product-categorie">Categoría</label>
+                    <div class="input-group">
+                      <span class="input-group-addon">
+                        <i class="glyphicon glyphicon-list"></i>
+                      </span>
+                      <select class="form-control" name="product-categorie" required>
+                        <option value="">Selecciona una categoría</option>
+                        <?php foreach ($all_categories as $cat): ?>
+                          <option value="<?php echo (int)$cat['id']; ?>" <?php if($product['Categoria'] === $cat['id']): echo "selected"; endif; ?>>
+                            <?php echo remove_junk($cat['name']); ?>
+                          </option>
+                        <?php endforeach; ?>
+                      </select>
+                    </div>
                   </div>
-                  <div class="col-md-6">
-                    <select class="form-control" name="product-photo">
-                      <option value=""> Sin imagen</option>
-                      <?php  foreach ($all_photo as $photo): ?>
-                        <option value="<?php echo (int)$photo['id'];?>" <?php if($product['media_id'] === $photo['id']): echo "selected"; endif; ?> >
-                          <?php echo $photo['file_name'] ?></option>
-                      <?php endforeach; ?>
-                    </select>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="product-quantity">Cantidad en Inventario</label>
+                    <div class="input-group">
+                      <span class="input-group-addon">
+                        <i class="glyphicon glyphicon-shopping-cart"></i>
+                      </span>
+                      <input type="number" class="form-control" name="product-quantity" value="<?php echo remove_junk($quantity); ?>" required>
+                    </div>
                   </div>
                 </div>
               </div>
 
               <div class="form-group">
-               <div class="row">
-                 <div class="col-md-4">
-                  <div class="form-group">
-                    <label for="qty">Cantidad</label>
-                    <div class="input-group">
-                      <span class="input-group-addon">
-                       <i class="glyphicon glyphicon-shopping-cart"></i>
-                      </span>
-                      <input type="number" class="form-control" name="product-quantity" value="<?php echo remove_junk($product['quantity']); ?>">
-                   </div>
-                  </div>
-                 </div>
-                 <div class="col-md-4">
-                  <div class="form-group">
-                    <label for="qty">Precio de compra</label>
-                    <div class="input-group">
-                      <span class="input-group-addon">
-                        <i class="glyphicon glyphicon-usd"></i>
-                      </span>
-                      <input type="number" class="form-control" name="buying-price" value="<?php echo remove_junk($product['buy_price']);?>">
-                      <span class="input-group-addon">.00</span>
-                   </div>
-                  </div>
-                 </div>
-                  <div class="col-md-4">
-                   <div class="form-group">
-                     <label for="qty">Precio de venta</label>
-                     <div class="input-group">
-                       <span class="input-group-addon">
-                         <i class="glyphicon glyphicon-usd"></i>
-                       </span>
-                       <input type="number" class="form-control" name="saleing-price" value="<?php echo remove_junk($product['sale_price']);?>">
-                       <span class="input-group-addon">.00</span>
-                    </div>
-                   </div>
-                  </div>
-               </div>
+                <label for="product-cost">Precio</label>
+                <div class="input-group">
+                  <span class="input-group-addon">
+                    <i class="glyphicon glyphicon-usd"></i>
+                  </span>
+                  <input type="number" class="form-control" name="product-cost" value="<?php echo remove_junk($product['Costo']);?>" step="0.01" required>
+                </div>
               </div>
-              <button type="submit" name="product" class="btn btn-danger">Actualizar</button>
-          </form>
-         </div>
+
+              <div class="form-group text-center" style="margin-top: 30px;">
+                <button type="submit" name="product" class="btn btn-success">
+                  <i class="glyphicon glyphicon-ok"></i> Guardar Cambios
+                </button>
+                <a href="product.php" class="btn btn-danger">
+                  <i class="glyphicon glyphicon-remove"></i> Cancelar
+                </a>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
+    </div>
   </div>
+</div>
+
+<style>
+.product-image-preview {
+  width: 100%;
+  height: 250px;
+  border: 2px dashed #ccc;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;
+  overflow: hidden;
+}
+
+.product-image-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* Añadir margen inferior a todos los form-groups dentro del formulario */
+.panel-body .col-md-8 form .form-group {
+  margin-bottom: 20px;
+}
+
+/* Asegurar que las columnas dentro de la fila del formulario tengan padding */
+.panel-body .col-md-8 form .row > div[class*="col-"] {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+.input-group-addon {
+  background-color: #f8f9fa;
+}
+
+.btn-success {
+  margin-right: 10px;
+}
+
+.panel-heading {
+  background-color: #f8f9fa !important;
+}
+
+.panel {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+}
+
+.panel:hover {
+  box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+}
+</style>
+
+<script>
+document.getElementById('product-photo').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('image-preview').src = e.target.result;
+    }
+    reader.readAsDataURL(file);
+  }
+});
+</script>
 
 <?php include_once('layouts/footer.php'); ?>
