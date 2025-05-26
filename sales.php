@@ -49,7 +49,7 @@ $sales = find_by_sql($sql);
               <th>Cliente</th>
               <th>Producto</th>
               <th>Servicio</th>
-              <th class="text-center" style="width: 15%;">Total</th>
+              <th class="text-center" style="width: 15%;">Precio Unitario</th>
               <th class="text-center" style="width: 15%;">Fecha</th>
               <th class="text-center" style="width: 100px;">Acciones</th>
             </tr>
@@ -63,23 +63,32 @@ $sales = find_by_sql($sql);
                <!-- Nombre del cliente -->
                <td><?php echo remove_junk($sale['ClienteNombre'] . ' ' . $sale['ClienteApellido']); ?></td>
                <!-- Nombre del producto -->
-               <!-- Nombre del producto (limpio de caracteres especiales) -->
-               <td><?php echo remove_junk($sale['name']); ?></td>
-               <!-- Cantidad vendida -->
-               <td class="text-center"><?php echo (int)$sale['qty']; ?></td>
+               <td><?php echo remove_junk($sale['ProductoNombre']); ?></td>
+               <!-- Nombre del servicio -->
+               <td><?php echo remove_junk($sale['ServicioNombre']); ?></td>
                <!-- Precio total -->
-               <td class="text-center"><?php echo remove_junk($sale['price']); ?></td>
+               <td class="text-center">
+                 <?php 
+                   $precio = 0;
+                   if (!empty($sale['ProductoCosto'])) {
+                     $precio = $sale['ProductoCosto'];
+                   } elseif (!empty($sale['ServicioCosto'])) {
+                     $precio = $sale['ServicioCosto'];
+                   }
+                   echo remove_junk(number_format($precio, 2));
+                 ?>
+               </td>
                <!-- Fecha de la venta -->
-               <td class="text-center"><?php echo $sale['date']; ?></td>
+               <td class="text-center"><?php echo read_date($sale['Fecha']); ?></td>
                <!-- Botones de acción (editar y eliminar) -->
                <td class="text-center">
                   <div class="btn-group">
                      <!-- Botón para editar venta -->
-                     <a href="edit_sale.php?id=<?php echo (int)$sale['id'];?>" class="btn btn-warning btn-xs"  title="Edit" data-toggle="tooltip">
+                     <a href="edit_sale.php?id=<?php echo (int)$sale['Folio'];?>" class="btn btn-warning btn-xs"  title="Editar" data-toggle="tooltip">
                        <span class="glyphicon glyphicon-edit"></span>
                      </a>
                      <!-- Botón para eliminar venta -->
-                     <a href="delete_sale.php?id=<?php echo (int)$sale['id'];?>" class="btn btn-danger btn-xs"  title="Delete" data-toggle="tooltip">
+                     <a href="delete_sale.php?id=<?php echo (int)$sale['Folio'];?>" class="btn btn-danger btn-xs"  title="Eliminar" data-toggle="tooltip">
                        <span class="glyphicon glyphicon-trash"></span>
                      </a>
                   </div>

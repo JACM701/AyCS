@@ -57,6 +57,10 @@ function find_by_id($table,$id)
             case 'media':
               $id_column = 'id';
               break;
+            case 'inventario':
+              $id_column = 'Id_Producto';
+              break;
+            // Añadir más casos si hay otras tablas con IDs diferentes
           }
           $sql = $db->query("SELECT * FROM {$db->escape($table)} WHERE {$id_column}='{$db->escape($id)}' LIMIT 1");
           if($result = $db->fetch_assoc($sql))
@@ -73,8 +77,29 @@ function delete_by_id($table,$id)
   global $db;
   if(tableExists($table))
    {
+    // Definir el nombre de la columna ID según la tabla
+    $id_column = 'id'; // valor por defecto
+    switch($table) {
+      case 'clientes':
+        $id_column = 'Id_Cliente';
+        break;
+      case 'productos':
+        $id_column = 'Id_Productos';
+        break;
+      case 'venta':
+        $id_column = 'Folio';
+        break;
+      case 'servicio':
+        $id_column = 'Id_Servicio';
+        break;
+      case 'inventario':
+        $id_column = 'Id_Producto';
+        break;
+      // Añadir más casos si hay otras tablas con IDs diferentes
+    }
+
     $sql = "DELETE FROM ".$db->escape($table);
-    $sql .= " WHERE id=". $db->escape($id);
+    $sql .= " WHERE {$id_column}=". $db->escape($id);
     $sql .= " LIMIT 1";
     $db->query($sql);
     return ($db->affected_rows() === 1) ? true : false;

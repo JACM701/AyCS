@@ -260,6 +260,7 @@ UNLOCK TABLES;
 -- Dump completed on 2025-05-12 17:57:56
 
 --
+--CAMBIOS DEL DIA 19 DE MAYO DEL 2025 AGREGUE LO DE COTIZACIÓN Y PERSONZALIZAR PERFIL DEL INICIO`
 -- Estructura de tabla para la tabla `quotes`
 --
 

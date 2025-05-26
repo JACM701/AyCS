@@ -10,6 +10,11 @@ $all_categories = find_all('categories');
 
 // Obtener la cantidad del inventario
 $sql = "SELECT i.Cantidad FROM inventario i WHERE i.Id_Producto = '{$product['Id_Productos']}'";
+
+// Depuración: Mostrar la consulta SQL para obtener inventario y el ID del producto
+echo "Debug Inventory SQL: {$sql}<br>";
+echo "Debug Product ID for Inventory: {$product['Id_Productos']}<br>";
+
 $inventory = find_by_sql($sql);
 $quantity = $inventory ? $inventory[0]['Cantidad'] : 0;
 
@@ -36,6 +41,10 @@ if(!$product){
          $p_photo = upload_image($_FILES['product-photo'], 'uploads/products/');
        }
 
+       // Depuración: Mostrar variables antes de la consulta UPDATE
+       echo "Debug: p_name = {$p_name}, p_desc = {$p_desc}, p_qty = {$p_qty}, p_cost = {$p_cost}, p_cat = {$p_cat}, p_photo = {$p_photo}, product_id = {$product['Id_Productos']}";
+       exit(); // Detener ejecución para ver los valores
+
        $query   = "UPDATE productos SET";
        $query  .=" Nombre ='{$p_name}', Descripcion ='{$p_desc}',";
        $query  .=" Costo ='{$p_cost}', Foto ='{$p_photo}', Categoria ='{$p_cat}'";
@@ -49,7 +58,8 @@ if(!$product){
            $session->msg('s',"Producto actualizado exitosamente.");
            redirect('product.php', false);
          } else {
-           $session->msg('d',' Error al actualizar el inventario.');
+           // Manejo de errores detallado para la actualización del inventario
+           $session->msg('d',' Error al actualizar el inventario: ' . $db->con->error);
            redirect('edit_product.php?id='.$product['Id_Productos'], false);
          }
        } else {

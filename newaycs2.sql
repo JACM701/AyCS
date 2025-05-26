@@ -1,0 +1,434 @@
+-- MySQL dump 10.13  Distrib 8.0.42, for Win64 (x86_64)
+--
+-- Host: localhost    Database: newaycs
+-- ------------------------------------------------------
+-- Server version	5.5.5-10.4.32-MariaDB
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+-- Eliminar todas las tablas existentes
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS `venta`;
+DROP TABLE IF EXISTS `productos`;
+DROP TABLE IF EXISTS `servicio`;
+DROP TABLE IF EXISTS `clientes`;
+DROP TABLE IF EXISTS `categories`;
+DROP TABLE IF EXISTS `media`;
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- Crear tablas base sin claves foráneas primero
+CREATE TABLE `categories` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(60) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `media` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `file_name` varchar(255) NOT NULL,
+  `file_type` varchar(100) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `clientes` (
+  `Id_Cliente` int(11) NOT NULL AUTO_INCREMENT,
+  `Nombre` varchar(100) NOT NULL,
+  `Apellido` varchar(100) NOT NULL,
+  `Correo` varchar(100) DEFAULT NULL,
+  `Número` varchar(20) NOT NULL,
+  `Dirección` varchar(100) NOT NULL,
+  PRIMARY KEY (`Id_Cliente`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `servicio` (
+  `Id_Servicio` int(11) NOT NULL AUTO_INCREMENT,
+  `Nombre` varchar(50) NOT NULL,
+  `Descripción` varchar(50) NOT NULL,
+  `Costo` decimal(10,2) NOT NULL,
+  PRIMARY KEY (`Id_Servicio`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `productos` (
+  `Id_Productos` int(11) NOT NULL AUTO_INCREMENT,
+  `Nombre` varchar(100) NOT NULL,
+  `Descripcion` varchar(500) NOT NULL,
+  `Costo` decimal(10,2) NOT NULL,
+  `Foto` varchar(500) DEFAULT NULL,
+  `Categoria` int(11) DEFAULT NULL,
+  `stock_minimo` int(11) DEFAULT 5,
+  `estado` enum('activo','inactivo') DEFAULT 'activo',
+  PRIMARY KEY (`Id_Productos`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Agregar claves foráneas después de crear todas las tablas
+ALTER TABLE `productos`
+ADD CONSTRAINT `productos_ibfk_1` 
+FOREIGN KEY (`Categoria`) REFERENCES `categories` (`id`) ON DELETE SET NULL;
+
+-- Crear la tabla venta
+CREATE TABLE `venta` (
+  `Folio` int(11) NOT NULL AUTO_INCREMENT,
+  `Fecha` date NOT NULL,
+  `Id_Servicio` int(11) DEFAULT NULL,
+  `Id_Cliente` int(11) NOT NULL,
+  `Id_Productos` int(11) DEFAULT NULL,
+  `cantidad` int(11) NOT NULL DEFAULT 1,
+  `precio_unitario` decimal(10,2) NOT NULL,
+  `total` decimal(10,2) NOT NULL,
+  PRIMARY KEY (`Folio`),
+  KEY `Id_Servicio` (`Id_Servicio`),
+  KEY `Id_Cliente` (`Id_Cliente`),
+  KEY `Id_Productos` (`Id_Productos`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Agregar claves foráneas a la tabla venta
+ALTER TABLE `venta`
+ADD CONSTRAINT `venta_ibfk_1` FOREIGN KEY (`Id_Servicio`) REFERENCES `servicio` (`Id_Servicio`) ON DELETE SET NULL,
+ADD CONSTRAINT `venta_ibfk_2` FOREIGN KEY (`Id_Cliente`) REFERENCES `clientes` (`Id_Cliente`) ON DELETE SET NULL,
+ADD CONSTRAINT `venta_ibfk_3` FOREIGN KEY (`Id_Productos`) REFERENCES `productos` (`Id_Productos`) ON DELETE SET NULL;
+
+--
+-- Estructura de tabla para la tabla `users`
+--
+
+DROP TABLE IF EXISTS `users`;
+CREATE TABLE `users` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` varchar(60) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `user_level` int(11) NOT NULL,
+  `image` varchar(255) DEFAULT 'no_image.jpg',
+  `status` int(1) NOT NULL,
+  `last_login` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Estructura de tabla para la tabla `user_groups`
+--
+
+DROP TABLE IF EXISTS `user_groups`;
+CREATE TABLE `user_groups` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `group_name` varchar(150) NOT NULL,
+  `group_level` int(11) NOT NULL,
+  `group_status` int(1) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Estructura de tabla para la tabla `inventario`
+--
+
+DROP TABLE IF EXISTS `inventario`;
+CREATE TABLE `inventario` (
+  `Id_Producto` int(11) NOT NULL,
+  `Cantidad` decimal(10,0) NOT NULL DEFAULT 0,
+  `ultima_actualizacion` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`Id_Producto`),
+  CONSTRAINT `inventario_ibfk_1` FOREIGN KEY (`Id_Producto`) REFERENCES `productos` (`Id_Productos`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Estructura de tabla para la tabla `kit`
+--
+
+DROP TABLE IF EXISTS `kit`;
+CREATE TABLE `kit` (
+  `Id_Kit` int(11) NOT NULL AUTO_INCREMENT,
+  `Precio` decimal(10,2) NOT NULL,
+  `Id_productos` int(11) DEFAULT NULL,
+  PRIMARY KEY (`Id_Kit`),
+  KEY `Id_productos` (`Id_productos`),
+  CONSTRAINT `kit_ibfk_1` FOREIGN KEY (`Id_productos`) REFERENCES `productos` (`Id_Productos`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Estructura de tabla para la tabla `quotes`
+--
+
+DROP TABLE IF EXISTS `quotes`;
+CREATE TABLE `quotes` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `client_id` int(11) DEFAULT NULL,
+  `client_name` varchar(100) NOT NULL,
+  `client_phone` varchar(20) DEFAULT NULL,
+  `client_location` varchar(255) DEFAULT NULL,
+  `quote_date` date NOT NULL,
+  `quote_type` varchar(100) DEFAULT NULL,
+  `subtotal` decimal(25,2) DEFAULT '0.00',
+  `discount_percentage` decimal(5,2) DEFAULT '0.00',
+  `total_amount` decimal(25,2) DEFAULT '0.00',
+  `observations` text DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `client_id` (`client_id`),
+  CONSTRAINT `quotes_ibfk_1` FOREIGN KEY (`client_id`) REFERENCES `clientes` (`Id_Cliente`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Estructura de tabla para la tabla `quote_items`
+--
+
+DROP TABLE IF EXISTS `quote_items`;
+CREATE TABLE `quote_items` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `quote_id` int(11) UNSIGNED NOT NULL,
+  `product_id` int(11) DEFAULT NULL,
+  `service_id` int(11) DEFAULT NULL,
+  `description` varchar(255) NOT NULL,
+  `quantity` int(11) NOT NULL DEFAULT 1,
+  `unit_price` decimal(25,2) NOT NULL,
+  `total_price` decimal(25,2) NOT NULL,
+  `image` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `quote_id` (`quote_id`),
+  KEY `product_id` (`product_id`),
+  KEY `service_id` (`service_id`),
+  CONSTRAINT `quote_items_ibfk_1` FOREIGN KEY (`quote_id`) REFERENCES `quotes` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `quote_items_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `productos` (`Id_Productos`) ON DELETE SET NULL,
+  CONSTRAINT `quote_items_ibfk_3` FOREIGN KEY (`service_id`) REFERENCES `servicio` (`Id_Servicio`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Estructura de tabla para la tabla `historial_inventario`
+--
+
+DROP TABLE IF EXISTS `historial_inventario`;
+CREATE TABLE `historial_inventario` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `Id_Producto` int(11) NOT NULL,
+  `tipo_movimiento` enum('entrada','salida','ajuste') NOT NULL,
+  `cantidad` int(11) NOT NULL,
+  `cantidad_anterior` int(11) NOT NULL,
+  `cantidad_nueva` int(11) NOT NULL,
+  `fecha` datetime NOT NULL DEFAULT current_timestamp(),
+  `usuario_id` int(11) UNSIGNED NOT NULL,
+  `observacion` text DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `Id_Producto` (`Id_Producto`),
+  KEY `usuario_id` (`usuario_id`),
+  CONSTRAINT `historial_inventario_ibfk_1` FOREIGN KEY (`Id_Producto`) REFERENCES `productos` (`Id_Productos`) ON DELETE CASCADE,
+  CONSTRAINT `historial_inventario_ibfk_2` FOREIGN KEY (`usuario_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Estructura de tabla para la tabla `settings`
+--
+
+DROP TABLE IF EXISTS `settings`;
+CREATE TABLE `settings` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `banner_title` varchar(255) DEFAULT 'Bienvenido al Sistema',
+  `banner_text` text DEFAULT 'Sistema de Gestión de Inventario',
+  `banner_image` varchar(255) DEFAULT 'libs/images/default-banner.jpg',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `users`
+--
+
+INSERT INTO `users` (`id`, `name`, `username`, `password`, `user_level`, `image`, `status`, `last_login`) VALUES
+(1, 'Admin Users', 'admin', 'd033e22ae348aeb5660fc2140aec35850c4da997', 1, 'pzg9wa7o1.jpg', 1, '2020-06-16 07:11:11'),
+(2, 'Special User', 'special', 'ba36b97a41e7faf742ab09bf88405ac04f99599a', 2, 'no_image.jpg', 1, '2025-06-45 07:11:26'),
+(3, 'Default User', 'user', '12dea96fec20593566ab75692c9949596833adc9', 3, 'no_image.jpg', 1, '2023-06-17 07:11:03');
+
+--
+-- Volcado de datos para la tabla `user_groups`
+--
+
+INSERT INTO `user_groups` (`id`, `group_name`, `group_level`, `group_status`) VALUES
+(1, 'Admin', 1, 1),
+(2, 'Special', 2, 0),
+(3, 'User', 3, 1);
+
+--
+-- Volcado de datos para la tabla `settings`
+--
+
+INSERT INTO `settings` (`banner_title`, `banner_text`, `banner_image`)
+SELECT 'Bienvenido al Sistema', 'Sistema de Gestión de Inventario', 'libs/images/default-banner.jpg'
+WHERE NOT EXISTS (SELECT 1 FROM settings WHERE id = 1);
+
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2025-05-12 17:57:56
+
+--
+--CAMBIOS DEL DIA 19 DE MAYO DEL 2025 AGREGUE LO DE COTIZACIÓN Y PERSONZALIZAR PERFIL DEL INICIO`
+-- Estructura de tabla para la tabla `quotes`
+--
+
+CREATE TABLE `quotes` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `client_id` int(11) NULL, -- Eliminado UNSIGNED para que coincida con clientes.Id_Cliente
+  `client_name` varchar(100) NOT NULL, -- Guardar nombre aunque sea cliente registrado, para historial
+  `client_phone` varchar(20) NULL,
+  `client_location` varchar(255) NULL,
+  `quote_date` date NOT NULL,
+  `quote_type` varchar(100) NULL,
+  `subtotal` decimal(25,2) DEFAULT '0.00',
+  `discount_percentage` decimal(5,2) DEFAULT '0.00',
+  `total_amount` decimal(25,2) DEFAULT '0.00',
+  `observations` text NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`client_id`) REFERENCES `clientes`(`Id_Cliente`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+--CAMBIOS DEL DIA 19 DE MAYO DEL 2025 AGREGUE LO DE COTIZACIÓN Y PERSONZALIZAR PERFIL DEL INICIO
+-- Estructura de tabla para la tabla `quote_items`
+--
+
+CREATE TABLE `quote_items` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `quote_id` int(11) UNSIGNED NOT NULL,
+  `product_id` int(11) NULL, -- Eliminado UNSIGNED para que coincida con productos.Id_Productos
+  `service_id` int(11) NULL, -- Eliminado UNSIGNED para que coincida con servicio.Id_Servicio
+  `description` varchar(255) NOT NULL, -- Descripción del ítem (puede sobrescribir producto/servicio)
+  `quantity` int(11) NOT NULL DEFAULT '1',
+  `unit_price` decimal(25,2) NOT NULL,
+  `total_price` decimal(25,2) NOT NULL, -- Cantidad * Precio Unitario
+  `image` varchar(255) NULL, -- Ruta a la imagen ilustrativa
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`quote_id`) REFERENCES `quotes`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (`product_id`) REFERENCES `productos`(`Id_Productos`) ON DELETE SET NULL ON UPDATE CASCADE,
+  FOREIGN KEY (`service_id`) REFERENCES `servicio`(`Id_Servicio`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Estructura de tabla para la tabla `settings`
+--
+
+CREATE TABLE IF NOT EXISTS `settings` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `banner_title` varchar(255) DEFAULT 'Bienvenido al Sistema',
+  `banner_text` text DEFAULT 'Sistema de Gestión de Inventario',
+  `banner_image` varchar(255) DEFAULT 'libs/images/default-banner.jpg',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `settings`
+--
+
+INSERT INTO settings (banner_title, banner_text, banner_image)
+SELECT 'Bienvenido al Sistema', 'Sistema de Gestión de Inventario', 'libs/images/default-banner.jpg'
+WHERE NOT EXISTS (SELECT 1 FROM settings WHERE id = 1);
+
+--Añadimos cambios en la base de datos 26 DE MAYO DEL 2025 abajo nueva tabla historial de inventario
+-- Crear tabla de historial de inventario
+CREATE TABLE IF NOT EXISTS `historial_inventario` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `Id_Producto` int(11) NOT NULL,
+  `tipo_movimiento` enum('entrada','salida','ajuste') NOT NULL,
+  `cantidad` int(11) NOT NULL,
+  `cantidad_anterior` int(11) NOT NULL,
+  `cantidad_nueva` int(11) NOT NULL,
+  `fecha` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `usuario_id` int(11) UNSIGNED NOT NULL,
+  `observacion` text DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `Id_Producto` (`Id_Producto`),
+  KEY `usuario_id` (`usuario_id`),
+  CONSTRAINT `historial_inventario_ibfk_1` FOREIGN KEY (`Id_Producto`) REFERENCES `productos` (`Id_Productos`) ON DELETE CASCADE,
+  CONSTRAINT `historial_inventario_ibfk_2` FOREIGN KEY (`usuario_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Modificar la tabla inventario para usar ON DELETE CASCADE
+ALTER TABLE `inventario`
+DROP FOREIGN KEY `inventario_ibfk_1`;
+
+ALTER TABLE `inventario`
+ADD CONSTRAINT `inventario_ibfk_1` FOREIGN KEY (`Id_Producto`) REFERENCES `productos` (`Id_Productos`) ON DELETE CASCADE;
+
+-- Modificar la tabla kit para usar ON DELETE SET NULL
+ALTER TABLE `kit`
+DROP FOREIGN KEY `kit_ibfk_1`;
+
+ALTER TABLE `kit`
+ADD CONSTRAINT `kit_ibfk_1` FOREIGN KEY (`Id_productos`) REFERENCES `productos` (`Id_Productos`) ON DELETE SET NULL;
+
+-- Modificar la tabla productos para usar ON DELETE SET NULL con categories
+ALTER TABLE `productos`
+DROP FOREIGN KEY `productos_ibfk_1`;
+
+ALTER TABLE `productos`
+ADD CONSTRAINT `productos_ibfk_1` FOREIGN KEY (`Categoria`) REFERENCES `categories` (`id`) ON DELETE SET NULL;
+
+-- Modificar la tabla quote_items para usar ON DELETE SET NULL
+ALTER TABLE `quote_items`
+DROP FOREIGN KEY `quote_items_ibfk_1`,
+DROP FOREIGN KEY `quote_items_ibfk_2`,
+DROP FOREIGN KEY `quote_items_ibfk_3`;
+
+ALTER TABLE `quote_items`
+ADD CONSTRAINT `quote_items_ibfk_1` FOREIGN KEY (`quote_id`) REFERENCES `quotes` (`id`) ON DELETE CASCADE,
+ADD CONSTRAINT `quote_items_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `productos` (`Id_Productos`) ON DELETE SET NULL,
+ADD CONSTRAINT `quote_items_ibfk_3` FOREIGN KEY (`service_id`) REFERENCES `servicio` (`Id_Servicio`) ON DELETE SET NULL;
+
+-- Modificar la tabla quotes para usar ON DELETE SET NULL
+ALTER TABLE `quotes`
+DROP FOREIGN KEY `quotes_ibfk_1`;
+
+ALTER TABLE `quotes`
+ADD CONSTRAINT `quotes_ibfk_1` FOREIGN KEY (`client_id`) REFERENCES `clientes` (`Id_Cliente`) ON DELETE SET NULL;
+
+-- Modificar la tabla historial_inventario para usar ON DELETE CASCADE
+ALTER TABLE `historial_inventario`
+DROP FOREIGN KEY `historial_inventario_ibfk_1`,
+DROP FOREIGN KEY `historial_inventario_ibfk_2`;
+
+ALTER TABLE `historial_inventario`
+ADD CONSTRAINT `historial_inventario_ibfk_1` FOREIGN KEY (`Id_Producto`) REFERENCES `productos` (`Id_Productos`) ON DELETE CASCADE,
+ADD CONSTRAINT `historial_inventario_ibfk_2` FOREIGN KEY (`usuario_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+-- Modificar la tabla venta para usar ON DELETE SET NULL
+ALTER TABLE `venta` 
+DROP FOREIGN KEY IF EXISTS `venta_ibfk_1`,
+DROP FOREIGN KEY IF EXISTS `venta_ibfk_2`,
+DROP FOREIGN KEY IF EXISTS `venta_ibfk_3`;
+
+-- Eliminar los índices existentes
+ALTER TABLE `venta`
+DROP INDEX IF EXISTS `Id_Servicio`,
+DROP INDEX IF EXISTS `Id_Cliente`,
+DROP INDEX IF EXISTS `Id_Productos`;
+
+-- Agregar los índices nuevamente
+ALTER TABLE `venta`
+ADD INDEX `Id_Servicio` (`Id_Servicio`),
+ADD INDEX `Id_Cliente` (`Id_Cliente`),
+ADD INDEX `Id_Productos` (`Id_Productos`);
+
+-- Agregar las restricciones de clave foránea
+ALTER TABLE `venta`
+ADD CONSTRAINT `venta_ibfk_1` FOREIGN KEY (`Id_Servicio`) REFERENCES `servicio` (`Id_Servicio`) ON DELETE SET NULL,
+ADD CONSTRAINT `venta_ibfk_2` FOREIGN KEY (`Id_Cliente`) REFERENCES `clientes` (`Id_Cliente`) ON DELETE SET NULL,
+ADD CONSTRAINT `venta_ibfk_3` FOREIGN KEY (`Id_Productos`) REFERENCES `productos` (`Id_Productos`) ON DELETE SET NULL;
+
