@@ -1,3 +1,8 @@
+<!-- Botón para abrir/cerrar el menú -->
+<div class="sidebar-toggle">
+  <i class="glyphicon glyphicon-menu-hamburger"></i>
+</div>
+
 <ul>
   <li>
     <a href="home.php">
@@ -56,3 +61,108 @@
     </ul>
   </li>
 </ul>
+
+<!-- Información del usuario -->
+<div class="user-info">
+  <?php
+    $user = current_user();
+    $user_image = $user['image'] ?? 'no_image.jpg';
+  ?>
+  <div class="user-profile">
+    <img src="uploads/users/<?php echo $user_image; ?>" alt="User Image" class="user-image">
+    <div class="user-details">
+      <span class="user-name"><?php echo remove_junk($user['name']); ?></span>
+      <span class="user-role"><?php echo remove_junk($user['username']); ?></span>
+    </div>
+  </div>
+</div>
+
+<style>
+.sidebar {
+  transition: all 0.3s ease;
+}
+
+.sidebar.collapsed {
+  width: 60px;
+}
+
+.sidebar.collapsed span,
+.sidebar.collapsed .submenu {
+  display: none;
+}
+
+.sidebar-toggle {
+  position: absolute;
+  right: -15px;
+  top: 20px;
+  background: #283593;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.user-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 15px;
+  background: rgba(0,0,0,0.1);
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  color: #fff;
+}
+
+.user-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+  border: 2px solid rgba(255,255,255,0.2);
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.user-role {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.sidebar.collapsed .user-info {
+  padding: 10px 5px;
+}
+
+.sidebar.collapsed .user-details {
+  display: none;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const sidebar = document.querySelector('.sidebar');
+  const toggleBtn = document.querySelector('.sidebar-toggle');
+  
+  toggleBtn.addEventListener('click', function() {
+    sidebar.classList.toggle('collapsed');
+  });
+});
+</script>

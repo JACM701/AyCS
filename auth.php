@@ -15,10 +15,10 @@ if(empty($errors)){
      // redirect user to group home page by user level
      if($user['user_level'] === '1'):
        $session->msg("s", "Hola ".$user['username'].", Bienvenido a AyCS INV.");
-       redirect('admin.php',false);
+       redirect('home.php',false);
      elseif ($user['user_level'] === '2'):
         $session->msg("s", "Hola ".$user['username'].", Bienvenido a AyCS INV.");
-       redirect('special_dashboard.php',false);
+       redirect('home.php',false);
      else:
         $session->msg("s", "Hola ".$user['username'].", Bienvenido a AyCS INV.");
        redirect('home.php',false);
