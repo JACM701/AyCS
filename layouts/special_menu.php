@@ -11,9 +11,8 @@
       <span>Inventario</span>
     </a>
     <ul class="nav submenu">
-      <li><a href="product.php">Ver productos</a></li>
+      <li><a href="product.php">Productos</a></li>
       <li><a href="add_product.php">Agregar producto</a></li>
-      <li><a href="media.php">Galería</a></li>
     </ul>
   </li>
   <li>

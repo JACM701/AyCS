@@ -104,11 +104,18 @@ CREATE TABLE `productos` (
   `Nombre` varchar(100) NOT NULL,
   `Descripcion` varchar(500) NOT NULL,
   `Costo` decimal(10,2) NOT NULL,
+  `Precio_Publico` decimal(10,2) DEFAULT '0.00',
+  `Precio_Instalador` decimal(10,2) DEFAULT '0.00',
+  `Margen_Utilidad` decimal(5,2) DEFAULT '0.00',
+  `Ganancia` decimal(10,2) DEFAULT '0.00',
   `Foto` varchar(500) DEFAULT NULL,
   `Categoria` int(11) UNSIGNED DEFAULT NULL,
+  `Id_Proveedor` int(11) DEFAULT NULL,
   PRIMARY KEY (`Id_Productos`),
   KEY `Categoria` (`Categoria`),
-  CONSTRAINT `productos_ibfk_1` FOREIGN KEY (`Categoria`) REFERENCES `categories` (`id`)
+  KEY `Id_Proveedor` (`Id_Proveedor`),
+  CONSTRAINT `productos_ibfk_1` FOREIGN KEY (`Categoria`) REFERENCES `categories` (`id`),
+  CONSTRAINT `productos_ibfk_2` FOREIGN KEY (`Id_Proveedor`) REFERENCES `proveedores` (`Id_Proveedor`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -324,3 +331,56 @@ CREATE TABLE IF NOT EXISTS `settings` (
 INSERT INTO settings (banner_title, banner_text, banner_image)
 SELECT 'Bienvenido al Sistema', 'Sistema de Gestión de Inventario', 'libs/images/default-banner.jpg'
 WHERE NOT EXISTS (SELECT 1 FROM settings WHERE id = 1);
+
+--
+-- Estructura de tabla para la tabla `kits`
+--
+
+CREATE TABLE `kits` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL,
+  `descripcion` text,
+  `precio_base` decimal(10,2) NOT NULL,
+  `precio_por_camara` decimal(10,2) NOT NULL DEFAULT '450.00',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Estructura de tabla para la tabla `kit_items`
+--
+
+CREATE TABLE `kit_items` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `kit_id` int(11) NOT NULL,
+  `producto_id` int(11) NOT NULL,
+  `cantidad_base` int(11) NOT NULL,
+  `cantidad_por_camara` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `es_por_camara` tinyint(1) NOT NULL DEFAULT '0',
+  `es_servicio` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `kit_id` (`kit_id`),
+  KEY `producto_id` (`producto_id`),
+  CONSTRAINT `kit_items_ibfk_1` FOREIGN KEY (`kit_id`) REFERENCES `kits` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `kit_items_ibfk_2` FOREIGN KEY (`producto_id`) REFERENCES `productos` (`Id_Productos`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Estructura de tabla para la tabla `quote_kit_items`
+--
+
+CREATE TABLE `quote_kit_items` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `quote_id` int(11) UNSIGNED NOT NULL,
+  `kit_id` int(11) NOT NULL,
+  `cantidad_camaras` int(11) NOT NULL,
+  `precio_por_camara` decimal(10,2) NOT NULL,
+  `subtotal` decimal(10,2) NOT NULL,
+  `observaciones` text,
+  PRIMARY KEY (`id`),
+  KEY `quote_id` (`quote_id`),
+  KEY `kit_id` (`kit_id`),
+  CONSTRAINT `quote_kit_items_ibfk_1` FOREIGN KEY (`quote_id`) REFERENCES `quotes` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `quote_kit_items_ibfk_2` FOREIGN KEY (`kit_id`) REFERENCES `kits` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

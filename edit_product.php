@@ -7,6 +7,7 @@
 <?php
 $product = find_by_id('productos',(int)$_GET['id']);
 $all_categories = find_all('categories');
+$all_providers = find_all('proveedores');
 
 // Obtener la cantidad del inventario
 $sql = "SELECT i.Cantidad FROM inventario i WHERE i.Id_Producto = '{$product['Id_Productos']}'";
@@ -25,7 +26,7 @@ if(!$product){
 ?>
 <?php
  if(isset($_POST['product'])){
-    $req_fields = array('product-title','product-description','product-quantity','product-cost','product-categorie');
+    $req_fields = array('product-title','product-description','product-quantity','product-cost', 'product-public-price', 'product-installer-price','product-categorie', 'product-provider');
     validate_fields($req_fields);
 
    if(empty($errors)){
@@ -33,8 +34,19 @@ if(!$product){
        $p_desc  = remove_junk($db->escape($_POST['product-description']));
        $p_qty   = remove_junk($db->escape($_POST['product-quantity']));
        $p_cost  = remove_junk($db->escape($_POST['product-cost']));
+       $p_public_price = remove_junk($db->escape($_POST['product-public-price']));
+       $p_installer_price = remove_junk($db->escape($_POST['product-installer-price']));
        $p_cat   = remove_junk($db->escape($_POST['product-categorie']));
+       $p_provider = remove_junk($db->escape($_POST['product-provider']));
        
+       // Calcular margen de utilidad y ganancia
+       $p_margin_utility = 0;
+       $p_gain = 0;
+       if ($p_public_price > 0 && $p_cost > 0) {
+           $p_margin_utility = (($p_public_price - $p_cost) / $p_public_price) * 100;
+           $p_gain = $p_public_price - $p_cost;
+       }
+
        // Manejo de la imagen
        $p_photo = $product['Foto'];
        if(isset($_FILES['product-photo']) && $_FILES['product-photo']['size'] > 0){
@@ -42,12 +54,12 @@ if(!$product){
        }
 
        // Depuración: Mostrar variables antes de la consulta UPDATE
-       echo "Debug: p_name = {$p_name}, p_desc = {$p_desc}, p_qty = {$p_qty}, p_cost = {$p_cost}, p_cat = {$p_cat}, p_photo = {$p_photo}, product_id = {$product['Id_Productos']}";
-       exit(); // Detener ejecución para ver los valores
+       // echo "Debug: p_name = {$p_name}, p_desc = {$p_desc}, p_qty = {$p_qty}, p_cost = {$p_cost}, p_cat = {$p_cat}, p_photo = {$p_photo}, product_id = {$product['Id_Productos']}";
+       // exit(); // Detener ejecución para ver los valores
 
        $query   = "UPDATE productos SET";
        $query  .=" Nombre ='{$p_name}', Descripcion ='{$p_desc}',";
-       $query  .=" Costo ='{$p_cost}', Foto ='{$p_photo}', Categoria ='{$p_cat}'";
+       $query  .=" Costo ='{$p_cost}', Precio_Publico ='{$p_public_price}', Precio_Instalador ='{$p_installer_price}', Margen_Utilidad ='{$p_margin_utility}', Ganancia ='{$p_gain}', Foto ='{$p_photo}', Categoria ='{$p_cat}', Id_Proveedor ='{$p_provider}'";
        $query  .=" WHERE Id_Productos ='{$product['Id_Productos']}'";
        $result = $db->query($query);
        
@@ -98,12 +110,7 @@ if(!$product){
                 <strong>Imagen del Producto</strong>
               </div>
               <div class="panel-body text-center">
-                <div class="product-image-preview">
-                  <?php if($product['Foto']): ?>
-                    <img src="uploads/products/<?php echo $product['Foto']; ?>" class="img-responsive img-thumbnail" id="image-preview" alt="Vista previa">
-                  <?php else: ?>
-                    <img src="uploads/products/no_image.jpg" class="img-responsive img-thumbnail" id="image-preview" alt="Sin imagen">
-                  <?php endif; ?>
+                <div class="product-image-preview" style="width: 150px; height: 150px; border: 1px solid #ddd; margin: 0 auto 10px; background-size: cover; background-position: center; background-image: url('uploads/products/<?php echo $product['Foto'] ? $product['Foto'] : 'no_image.jpg'; ?>');">
                 </div>
                 <div class="form-group" style="margin-top: 15px;">
                   <label for="product-photo" class="btn btn-primary">
@@ -158,7 +165,28 @@ if(!$product){
                 </div>
 
                 <div class="col-md-6">
-                  <div class="form-group">
+                   <div class="form-group">
+                    <label for="product-provider">Proveedor</label>
+                    <div class="input-group">
+                      <span class="input-group-addon">
+                        <i class="glyphicon glyphicon-trademark"></i>
+                      </span>
+                       <select name="product-provider" class="form-control" required>
+                          <option value="">Seleccionar proveedor</option>
+                          <?php foreach ($all_providers as $provider): ?>
+                            <option value="<?php echo (int)$provider['Id_Proveedor']; ?>" <?php if($product['Id_Proveedor'] === $provider['Id_Proveedor']): echo "selected"; endif; ?>>
+                              <?php echo remove_junk($provider['Nombre']); ?>
+                            </option>
+                          <?php endforeach; ?>
+                        </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                 <div class="col-md-3">
+                   <div class="form-group">
                     <label for="product-quantity">Cantidad en Inventario</label>
                     <div class="input-group">
                       <span class="input-group-addon">
@@ -167,17 +195,90 @@ if(!$product){
                       <input type="number" class="form-control" name="product-quantity" value="<?php echo remove_junk($quantity); ?>" required>
                     </div>
                   </div>
-                </div>
+                 </div>
+                <div class="col-md-3">
+                   <div class="form-group">
+                    <label for="product-cost">Costo Unitario</label>
+                    <div class="input-group">
+                      <span class="input-group-addon">
+                        <i class="glyphicon glyphicon-usd"></i>
+                      </span>
+                      <input type="number" class="form-control" name="product-cost" id="product-cost" value="<?php echo remove_junk($product['Costo']);?>" step="0.01" required>
+                    </div>
+                  </div>
+                 </div>
+                  <div class="col-md-3">
+                   <div class="form-group">
+                    <label for="product-public-percent">% Público (Opcional)</label>
+                    <div class="input-group">
+                      <span class="input-group-addon">
+                        <i class="glyphicon glyphicon-percent"></i>
+                      </span>
+                      <input type="number" class="form-control" name="product-public-percent" id="product-public-percent" placeholder="Ej: 42" step="0.01">
+                    </div>
+                  </div>
+                 </div>
+                 <div class="col-md-3">
+                   <div class="form-group">
+                    <label for="product-installer-percent">% Instalador (Opcional)</label>
+                    <div class="input-group">
+                      <span class="input-group-addon">
+                        <i class="glyphicon glyphicon-percent"></i>
+                      </span>
+                      <input type="number" class="form-control" name="product-installer-percent" id="product-installer-percent" placeholder="Ej: 25" step="0.01">
+                    </div>
+                  </div>
+                 </div>
               </div>
 
-              <div class="form-group">
-                <label for="product-cost">Precio</label>
-                <div class="input-group">
-                  <span class="input-group-addon">
-                    <i class="glyphicon glyphicon-usd"></i>
-                  </span>
-                  <input type="number" class="form-control" name="product-cost" value="<?php echo remove_junk($product['Costo']);?>" step="0.01" required>
-                </div>
+               <div class="row">
+                  <div class="col-md-4">
+                   <div class="form-group">
+                    <label for="product-public-price">Precio Público</label>
+                    <div class="input-group">
+                      <span class="input-group-addon">
+                        <i class="glyphicon glyphicon-usd"></i>
+                      </span>
+                      <input type="number" class="form-control" name="product-public-price" id="product-public-price" value="<?php echo remove_junk($product['Precio_Publico']);?>" step="0.01">
+                    </div>
+                  </div>
+                 </div>
+                  <div class="col-md-4">
+                   <div class="form-group">
+                    <label for="product-installer-price">Precio Instalador</label>
+                    <div class="input-group">
+                      <span class="input-group-addon">
+                        <i class="glyphicon glyphicon-usd"></i>
+                      </span>
+                      <input type="number" class="form-control" name="product-installer-price" id="product-installer-price" value="<?php echo remove_junk($product['Precio_Instalador']);?>" step="0.01">
+                    </div>
+                  </div>
+                 </div>
+                 <div class="col-md-4">
+                   <div class="form-group">
+                    <label for="product-margin-utility">Margen de Utilidad (%)</label>
+                    <div class="input-group">
+                      <span class="input-group-addon">
+                        <i class="glyphicon glyphicon-percent"></i>
+                      </span>
+                      <input type="text" class="form-control" name="product-margin-utility" value="<?php echo number_format($product['Margen_Utilidad'], 2);?>" readonly>
+                    </div>
+                  </div>
+                 </div>
+              </div>
+
+              <div class="row">
+                 <div class="col-md-4">
+                   <div class="form-group">
+                    <label for="product-gain">Ganancia</label>
+                    <div class="input-group">
+                      <span class="input-group-addon">
+                        <i class="glyphicon glyphicon-usd"></i>
+                      </span>
+                      <input type="text" class="form-control" name="product-gain" value="<?php echo number_format($product['Ganancia'], 2);?>" readonly>
+                    </div>
+                  </div>
+                 </div>
               </div>
 
               <div class="form-group text-center" style="margin-top: 30px;">
@@ -249,15 +350,66 @@ if(!$product){
 </style>
 
 <script>
-document.getElementById('product-photo').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      document.getElementById('image-preview').src = e.target.result;
+$(document).ready(function() {
+  // Script para la vista previa de la imagen
+  document.getElementById('product-photo').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        // Cambiar a background-image para el div de preview
+        document.querySelector('.product-image-preview').style.backgroundImage = 'url(' + e.target.result + ')';
+        document.querySelector('.product-image-preview').style.backgroundSize = 'contain';
+        document.querySelector('.product-image-preview').style.backgroundRepeat = 'no-repeat';
+        document.querySelector('.product-image-preview').style.backgroundPosition = 'center';
+      }
+      reader.readAsDataURL(file);
     }
-    reader.readAsDataURL(file);
-  }
+  });
+
+  // Script para calcular precios basados en porcentaje y actualizar margen/ganancia
+  $('#product-cost, #product-public-percent, #product-installer-percent, #product-public-price').on('input', function() {
+    var cost = parseFloat($('#product-cost').val()) || 0;
+    var publicPercent = parseFloat($('#product-public-percent').val()) || 0;
+    var installerPercent = parseFloat($('#product-installer-percent').val()) || 0;
+    var publicPrice = parseFloat($('#product-public-price').val()) || 0; // Obtener el valor actual para recalcular margen/ganancia
+
+    // Calcular Precio Público si se introduce porcentaje y costo
+    if ($(this).attr('id') === 'product-cost' || $(this).attr('id') === 'product-public-percent') {
+       if (cost > 0 && publicPercent >= 0) {
+         publicPrice = cost * (1 + (publicPercent / 100));
+         $('#product-public-price').val(publicPrice.toFixed(2));
+       } else if (cost > 0 && publicPercent < 0) {
+            $('#product-public-price').val('');
+       } else {
+         $('#product-public-price').val('');
+       }
+    }
+
+    // Calcular Precio Instalador si se introduce porcentaje y costo
+    if ($(this).attr('id') === 'product-cost' || $(this).attr('id') === 'product-installer-percent') {
+       if (cost > 0 && installerPercent >= 0) {
+         var installerPrice = cost * (1 + (installerPercent / 100));
+         $('#product-installer-price').val(installerPrice.toFixed(2));
+       } else if (cost > 0 && installerPercent < 0) {
+            $('#product-installer-price').val('');
+       } else {
+         $('#product-installer-price').val('');
+       }
+    }
+
+    // Recalcular Margen de Utilidad y Ganancia si Costo o Precio Público cambian (ya sea por porcentaje o edición manual)
+    if (publicPrice > 0 && cost > 0) {
+        var marginUtility = ((publicPrice - cost) / publicPrice) * 100;
+        var gain = publicPrice - cost;
+        $('#product-margin-utility').val(marginUtility.toFixed(2));
+        $('#product-gain').val(gain.toFixed(2));
+    } else {
+       $('#product-margin-utility').val('0.00');
+       $('#product-gain').val('0.00');
+    }
+
+  });
 });
 </script>
 

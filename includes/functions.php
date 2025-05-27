@@ -187,4 +187,18 @@ function upload_image($file, $target_dir) {
   }
 }
 
+/**
+ * Función para obtener los productos de un kit
+ * @param int $kit_id ID del kit
+ * @return array Array con los productos del kit
+ */
+function find_kit_items($kit_id) {
+  global $db;
+  $sql = "SELECT ki.*, p.Nombre as producto_nombre 
+          FROM kit_items ki 
+          LEFT JOIN productos p ON ki.producto_id = p.Id_Productos 
+          WHERE ki.kit_id = '{$kit_id}'";
+  return find_by_sql($sql);
+}
+
 ?>

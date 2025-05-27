@@ -35,7 +35,8 @@
     <ul class="nav submenu">
       <li><a href="product.php">Productos</a></li>
       <li><a href="add_product.php">Agregar producto</a></li>
-      <li><a href="media.php">Galería de imágenes</a></li>
+      <li><a href="kits.php">Kits</a></li>
+      <li><a href="add_kit.php">Agregar kit</a></li>
     </ul>
   </li>
   <li>

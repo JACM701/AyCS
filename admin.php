@@ -131,7 +131,7 @@
               <tr>
                 <td class="text-center"><?= count_id(); ?></td>
                 <td>
-                  <a href="edit_sale.php?id=<?= (int)$sale['Folio']; ?>">
+                  <a href="edit_sale.php?id=<?= (int)$sale['Folio'];?>">
                     <?= remove_junk($sale['ClienteNombre'] . ' ' . $sale['ClienteApellido']); ?>
                   </a>
                 </td>
@@ -164,7 +164,7 @@
       <div class="panel-body">
         <div class="list-group">
           <?php foreach ($recent_products as $product): ?>
-            <a class="list-group-item clearfix" href="edit_product.php?id=<?= (int)$product['Id_Productos']; ?>">
+            <a class="list-group-item clearfix" href="edit_product.php?id=<?= (int)$product['Id_Productos'];?>">
               <h4 class="list-group-item-heading">
                 <?php if ($product['Foto']): ?>
                   <img class="img-avatar img-circle" src="uploads/products/<?= $product['Foto']; ?>" alt="">

@@ -96,8 +96,8 @@
             </a>
           </div>
           <div class="col-md-4">
-            <a href="product.php" class="btn btn-info btn-block">
-              <i class="glyphicon glyphicon-list"></i> Ver Productos
+            <a href="product.php" class="btn btn-primary btn-block">
+              <i class="glyphicon glyphicon-th-large"></i> Productos
             </a>
           </div>
           <div class="col-md-4">
