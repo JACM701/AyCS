@@ -1,6 +1,52 @@
 <?php
   ob_start();
   require_once('includes/load.php');
+
+  // >>> Inicio de la lógica de autenticación movida desde auth.php
+  if(isset($_POST['login'])){
+      $username = remove_junk($db->escape($_POST['username']));
+      $password = remove_junk($db->escape($_POST['password']));
+
+      // Debug: Mostrar los valores recibidos (mensaje visible)
+      $session->msg("i", "Intento de login - Usuario: " . $username);
+      error_log("Intento de login - Usuario: " . $username); // Mantener log por si acaso
+
+      if(empty($username) || empty($password)){
+          $session->msg("d", "Por favor ingrese usuario y contraseña");
+          redirect('index.php', false);
+      }
+
+      // Intentar autenticar usando authenticate_v2
+      $user = authenticate_v2($username, $password);
+      
+      if($user){
+          // Debug: Mostrar información del usuario autenticado (mensaje visible)
+          $session->msg("s", "Usuario autenticado correctamente. ID: " . $user['ID'] . ", Rol: " . $user['Id_Rol']);
+          error_log("Usuario autenticado - ID: " . $user['ID'] . ", Rol: " . $user['Id_Rol']); // Mantener log
+          
+          $session->login($user['ID']);
+          // updateLastLogIn($user['ID']); // Deshabilitado ya que la columna Ultimo_Acceso no existe
+          
+          // Redirigir según el nivel de usuario
+          if($user['Id_Rol'] === '1'){
+              $session->msg("s", "Bienvenido al Panel de Administración");
+              redirect('admin.php', false);
+          } elseif($user['Id_Rol'] === '2'){
+              $session->msg("s", "Bienvenido al Panel de Usuario Especial");
+              redirect('special_dashboard.php', false);
+          } else {
+              $session->msg("s", "Bienvenido al Panel de Usuario");
+              redirect('home.php', false);
+          }
+      } else {
+        // Debug: Mostrar error de autenticación (mensaje visible)
+          $session->msg("d", "Usuario o contraseña incorrectos");
+          error_log("Error de autenticación para usuario: " . $username); // Mantener log
+          redirect('index.php', false);
+      }
+  }
+  // <<< Fin de la lógica de autenticación
+
   if($session->isUserLoggedIn(true)) { 
     redirect('home.php', false);
   }
@@ -162,7 +208,7 @@
             <p>Iniciar sesión en el sistema</p>
         </div>
         <?php echo display_msg($msg); ?>
-        <form method="post" action="auth.php" class="login-form">
+        <form method="post" action="" class="login-form">
             <div class="form-group">
                 <label for="username" class="control-label">Usuario</label>
                 <div class="input-group">
@@ -178,7 +224,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <button type="submit" class="btn btn-primary btn-block btn-login">
+                <button type="submit" class="btn btn-primary btn-block btn-login" name="login">
                     <i class="glyphicon glyphicon-log-in"></i> Iniciar Sesión
                 </button>
             </div>

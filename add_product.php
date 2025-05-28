@@ -34,37 +34,21 @@
 
   // Registro de producto
   if (isset($_POST['add_product'])) {
-    $req_fields = array('product-title', 'product-description', 'product-quantity', 'product-cost', 'product-public-price', 'product-installer-price', 'product-provider', 'product-category');
+    $req_fields = array('product-title', 'product-description', 'product-quantity', 'product-price', 'product-provider', 'product-category');
     validate_fields($req_fields);
 
     if (empty($errors)) {
       $p_name     = remove_junk($db->escape($_POST['product-title']));
       $p_desc     = remove_junk($db->escape($_POST['product-description']));
       $p_qty      = remove_junk($db->escape($_POST['product-quantity']));
-      $p_cost     = remove_junk($db->escape($_POST['product-cost']));
-      $p_public_price = remove_junk($db->escape($_POST['product-public-price']));
-      $p_installer_price = remove_junk($db->escape($_POST['product-installer-price']));
+      $p_price     = remove_junk($db->escape($_POST['product-price']));
       $p_provider = remove_junk($db->escape($_POST['product-provider']));
       $p_category = remove_junk($db->escape($_POST['product-category']));
-      $p_photo    = '';
-
-      // Calcular margen de utilidad y ganancia
-      $p_margin_utility = 0;
-      $p_gain = 0;
-      if ($p_public_price > 0 && $p_cost > 0) {
-          $p_margin_utility = (($p_public_price - $p_cost) / $p_public_price) * 100;
-          $p_gain = $p_public_price - $p_cost;
-      }
-
-      if (isset($_FILES['product-photo']) && $_FILES['product-photo']['size'] > 0) {
-        $p_photo = upload_image($_FILES['product-photo'], 'uploads/products/');
-      }
 
       $query  = "INSERT INTO producto (";
-      $query .= "Nombre, Descripcion, Costo, Precio_Publico, Precio_Instalador, Margen_Utilidad, Ganancia, Foto, Id_Proveedor, Categoria)";
+      $query .= "Nombre, Descripcion, Precio, Id_Proveedor, Id_Categoria)";
       $query .= " VALUES (";
-      $query .= "'{$p_name}', '{$p_desc}', '{$p_cost}', '{$p_public_price}', '{$p_installer_price}', ";
-      $query .= "'{$p_margin_utility}', '{$p_gain}', '{$p_photo}', '{$p_provider}', '{$p_category}'";
+      $query .= "'{$p_name}', '{$p_desc}', '{$p_price}', '{$p_provider}', '{$p_category}'";
       $query .= ")";
 
       if ($db->query($query)) {
@@ -132,72 +116,14 @@
             </div>
             <div class="col-md-4">
               <div class="form-group">
-                 <label for="product-cost">Costo Unitario</label>
+                 <label for="product-price">Precio</label>
                 <div class="input-group">
                   <span class="input-group-addon"><i class="glyphicon glyphicon-usd"></i></span>
-                  <input type="number" class="form-control" name="product-cost" id="product-cost" placeholder="Costo" step="0.01" required>
+                  <input type="number" class="form-control" name="product-price" id="product-price" placeholder="Precio" step="0.01" require>
                   <span class="input-group-addon">.00</span>
                 </div>
               </div>
             </div>
-             <div class="col-md-4">
-              <div class="form-group">
-                 <label for="product-public-percent">% Público (Opcional)</label>
-                <div class="input-group">
-                  <span class="input-group-addon"><i class="glyphicon glyphicon-percent"></i></span>
-                  <input type="number" class="form-control" name="product-public-percent" id="product-public-percent" placeholder="Ej: 42" step="0.01">
-                </div>
-              </div>
-            </div>
-             <div class="col-md-4">
-              <div class="form-group">
-                 <label for="product-installer-percent">% Instalador (Opcional)</label>
-                <div class="input-group">
-                  <span class="input-group-addon"><i class="glyphicon glyphicon-percent"></i></span>
-                  <input type="number" class="form-control" name="product-installer-percent" id="product-installer-percent" placeholder="Ej: 25" step="0.01">
-                </div>
-              </div>
-            </div>
-          </div>
-
-           <div class="row">
-            <div class="col-md-6">
-              <div class="form-group">
-                 <label for="product-public-price">Precio Público</label>
-                <div class="input-group">
-                  <span class="input-group-addon"><i class="glyphicon glyphicon-usd"></i></span>
-                  <input type="number" class="form-control" name="product-public-price" id="product-public-price" placeholder="Precio Público" step="0.01" require>
-                  <span class="input-group-addon">.00</span>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="form-group">
-                 <label for="product-installer-price">Precio Instalador</label>
-                <div class="input-group">
-                  <span class="input-group-addon"><i class="glyphicon glyphicon-usd"></i></span>
-                  <input type="number" class="form-control" name="product-installer-price" id="product-installer-price" placeholder="Precio Instalador" step="0.01" require>
-                  <span class="input-group-addon">.00</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-group">
-              <label for="product-photo">Imagen del Producto</label>
-              <div class="input-group">
-                <span class="input-group-addon">
-                  <i class="glyphicon glyphicon-picture"></i>
-                </span>
-                <div class="custom-file-upload">
-                  <label for="product-photo" class="btn btn-default">
-                    <i class="glyphicon glyphicon-camera"></i> Seleccionar Imagen
-                  </label>
-                  <input type="file" name="product-photo" id="product-photo" accept="image/*" style="display: none;">
-                  <span id="file-name" class="form-control" style="display: inline-block; width: auto; margin-left: 10px;">Ninguna imagen seleccionada</span>
-                </div>
-              </div>
-              <div id="image-preview" style="width: 150px; height: 150px; border: 2px dashed #ccc; margin-top: 10px; background-size: contain; background-position: center; background-repeat: no-repeat; border-radius: 5px;"></div>
           </div>
 
           <!-- Proveedor -->
@@ -210,7 +136,7 @@
                   <select name="product-provider" class="form-control" required>
                     <option value="">Seleccionar proveedor</option>
                     <?php foreach ($providers as $provider): ?>
-                      <option value="<?php echo (int)$provider['Id_Proveedor']; ?>">
+                      <option value="<?php echo (int)$provider['ID']; ?>">
                         <?php echo remove_junk($provider['Nombre']); ?>
                       </option>
                     <?php endforeach; ?>
@@ -233,8 +159,8 @@
               <select name="product-category" class="form-control" required>
                 <option value="">Seleccionar categoría</option>
                 <?php foreach ($categories as $category): ?>
-                  <option value="<?php echo (int)$category['id']; ?>">
-                    <?php echo remove_junk($category['name']); ?>
+                  <option value="<?php echo (int)$category['ID']; ?>">
+                    <?php echo remove_junk($category['Nombre']); ?>
                   </option>
                 <?php endforeach; ?>
               </select>

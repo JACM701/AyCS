@@ -7,7 +7,7 @@
   page_require_level(1);
 
   // Obtener conteos de diferentes entidades
-  $c_clientes     = count_by_id('cliente');    // Total de clientes
+  $c_clientes     = count_by_id('clientes');    // Total de clientes
   $c_productos    = count_by_id('productos');   // Total de productos
   $c_ventas       = count_by_id('venta');       // Total de ventas
   $c_servicios    = count_by_id('servicio');    // Total de servicios
@@ -39,6 +39,14 @@
                             ORDER BY total_vendido DESC
                             LIMIT 5";
   $products_sold = find_by_sql($sql_productos_vendidos);
+
+  // Array de estadísticas con los conteos obtenidos y clases de estilo
+  $stats = [
+    ['color' => 'bg-green',  'icon' => 'glyphicon-user',          'value' => isset($c_clientes['total']) ? $c_clientes['total'] : 0,   'label' => 'Clientes'],
+    ['color' => 'bg-red',    'icon' => 'glyphicon-wrench',        'value' => isset($c_servicios['total']) ? $c_servicios['total'] : 0,  'label' => 'Servicios'], // Usando el conteo de servicios
+    ['color' => 'bg-blue',   'icon' => 'glyphicon-shopping-cart', 'value' => isset($c_productos['total']) ? $c_productos['total'] : 0,  'label' => 'Productos'], // Usando el conteo de productos
+    ['color' => 'bg-yellow', 'icon' => 'glyphicon-usd',           'value' => isset($c_ventas['total']) ? $c_ventas['total'] : 0,     'label' => 'Ventas'] // Usando el conteo de ventas
+  ];
 ?>
 
 <?php include_once('layouts/header.php'); ?>
@@ -53,13 +61,6 @@
 <!-- Panel de estadísticas principales -->
 <div class="row">
   <?php
-    $stats = [
-      ['color' => 'bg-green',  'icon' => 'glyphicon-user',          'value' => $c_clientes['total'],   'label' => 'Clientes'],
-      ['color' => 'bg-red',    'icon' => 'glyphicon-wrench',        'value' => $c_servicios['total'],  'label' => 'Servicios'],
-      ['color' => 'bg-blue',   'icon' => 'glyphicon-shopping-cart', 'value' => $c_productos['total'],  'label' => 'Productos'],
-      ['color' => 'bg-yellow', 'icon' => 'glyphicon-usd',           'value' => $c_ventas['total'],     'label' => 'Ventas']
-    ];
-
     foreach ($stats as $stat):
   ?>
     <div class="col-md-3">

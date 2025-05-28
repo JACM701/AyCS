@@ -56,6 +56,9 @@ function find_by_id($table,$id)
             case 'usuario': // Agregar caso para la tabla usuario
               $id_column = 'ID'; // Usar 'ID' según naycs.sql
               break;
+            case 'categoria_producto': // Usar 'ID' para categoria_producto
+              $id_column = 'ID';
+              break;
           }
           // La tabla es la misma que se pasa, ya que find_all no singulariza
           $sql = $db->query("SELECT * FROM {$db->escape($table)} WHERE {$id_column}='{$db->escape($id)}' LIMIT 1");
@@ -93,6 +96,9 @@ function delete_by_id($table,$id)
       case 'producto': // Agregar caso para la tabla producto singular
         $id_column = 'Id_Productos';
         break;
+      case 'categoria_producto': // Usar 'ID' para categoria_producto
+        $id_column = 'ID';
+        break;
     }
 
     $sql = "DELETE FROM ".$db->escape($table);
@@ -125,6 +131,9 @@ function count_by_id($table){
         break;
       case 'media': // media table still uses 'id'
         $id_column = 'id';
+        break;
+      case 'categoria_producto': // Usar 'ID' para categoria_producto
+        $id_column = 'ID';
         break;
     }
 
@@ -173,11 +182,10 @@ function tableExists($table){
    function authenticate_v2($username, $password) {
      global $db;
      $username = $db->escape($username);
-     $password = sha1($password);
-     
-     $sql = "SELECT id, username, user_level FROM users WHERE username = '{$username}' AND password = '{$password}' AND status = 1";
+     // Si la contraseña en la BD NO está hasheada, usar la contraseña sin hashear
+     $password = $db->escape($password);
+     $sql = "SELECT ID, Usuario, Id_Rol FROM usuario WHERE Usuario = '{$username}' AND Contrasena = '{$password}' LIMIT 1";
      $result = $db->query($sql);
-     
      if($db->num_rows($result) == 1) {
          return $db->fetch_assoc($result);
      }
@@ -194,7 +202,8 @@ function tableExists($table){
       if(!$current_user) {
           if(isset($_SESSION['user_id'])) {
               $user_id = intval($_SESSION['user_id']);
-              $current_user = find_by_id('users', $user_id);
+              // Buscar usuario en la tabla 'usuario' usando la columna 'ID'
+              $current_user = find_by_id('usuario', $user_id);
           }
       }
     return $current_user;
@@ -251,7 +260,7 @@ function tableExists($table){
      endif;
      
      //verificando nivel de usuario y nivel requerido
-     if($current_user['user_level'] <= (int)$require_level):
+     if(isset($current_user['Id_Rol']) && $current_user['Id_Rol'] <= (int)$require_level):
             return true;
      else:
             $session->msg("d", "¡Lo siento!  no tienes permiso para ver la página.");

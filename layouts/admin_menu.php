@@ -72,8 +72,8 @@
   <div class="user-profile">
     <img src="uploads/users/<?php echo $user_image; ?>" alt="User Image" class="user-image">
     <div class="user-details">
-      <span class="user-name"><?php echo remove_junk($user['name']); ?></span>
-      <span class="user-role"><?php echo remove_junk($user['username']); ?></span>
+      <span class="user-name"><?php echo remove_junk($user['Nombre']); ?></span>
+      <span class="user-role"><?php echo remove_junk($user['Usuario']); ?></span>
     </div>
   </div>
 </div>

@@ -10,11 +10,11 @@ $all_categories = find_all('categories');
 $all_providers = find_all('proveedores');
 
 // Obtener la cantidad del inventario
-$sql = "SELECT i.Cantidad FROM inventario i WHERE i.Id_Producto = '{$product['Id_Productos']}'";
+$sql = "SELECT i.Cantidad FROM inventario i WHERE i.Id_Producto = '{$product['ID']}'";
 
 // Depuración: Mostrar la consulta SQL para obtener inventario y el ID del producto
-echo "Debug Inventory SQL: {$sql}<br>";
-echo "Debug Product ID for Inventory: {$product['Id_Productos']}<br>";
+// echo "Debug Inventory SQL: {$sql}<br>";
+// echo "Debug Product ID for Inventory: {$product['ID']}<br>";
 
 $inventory = find_by_sql($sql);
 $quantity = $inventory ? $inventory[0]['Cantidad'] : 0;
@@ -26,61 +26,40 @@ if(!$product){
 ?>
 <?php
  if(isset($_POST['product'])){
-    $req_fields = array('product-title','product-description','product-quantity','product-cost', 'product-public-price', 'product-installer-price','product-categorie', 'product-provider');
+    $req_fields = array('product-title','product-description','product-quantity','product-price','product-category', 'product-provider');
     validate_fields($req_fields);
 
    if(empty($errors)){
        $p_name  = remove_junk($db->escape($_POST['product-title']));
        $p_desc  = remove_junk($db->escape($_POST['product-description']));
        $p_qty   = remove_junk($db->escape($_POST['product-quantity']));
-       $p_cost  = remove_junk($db->escape($_POST['product-cost']));
-       $p_public_price = remove_junk($db->escape($_POST['product-public-price']));
-       $p_installer_price = remove_junk($db->escape($_POST['product-installer-price']));
-       $p_cat   = remove_junk($db->escape($_POST['product-categorie']));
+       $p_price  = remove_junk($db->escape($_POST['product-price']));
+       $p_cat   = remove_junk($db->escape($_POST['product-category']));
        $p_provider = remove_junk($db->escape($_POST['product-provider']));
        
-       // Calcular margen de utilidad y ganancia
-       $p_margin_utility = 0;
-       $p_gain = 0;
-       if ($p_public_price > 0 && $p_cost > 0) {
-           $p_margin_utility = (($p_public_price - $p_cost) / $p_public_price) * 100;
-           $p_gain = $p_public_price - $p_cost;
-       }
-
-       // Manejo de la imagen
-       $p_photo = $product['Foto'];
-       if(isset($_FILES['product-photo']) && $_FILES['product-photo']['size'] > 0){
-         $p_photo = upload_image($_FILES['product-photo'], 'uploads/products/');
-       }
-
-       // Depuración: Mostrar variables antes de la consulta UPDATE
-       // echo "Debug: p_name = {$p_name}, p_desc = {$p_desc}, p_qty = {$p_qty}, p_cost = {$p_cost}, p_cat = {$p_cat}, p_photo = {$p_photo}, product_id = {$product['Id_Productos']}";
-       // exit(); // Detener ejecución para ver los valores
-
        $query   = "UPDATE producto SET";
-       $query  .=" Nombre ='{$p_name}', Descripcion ='{$p_desc}',";
-       $query  .=" Costo ='{$p_cost}', Precio_Publico ='{$p_public_price}', Precio_Instalador ='{$p_installer_price}', Margen_Utilidad ='{$p_margin_utility}', Ganancia ='{$p_gain}', Foto ='{$p_photo}', Categoria ='{$p_cat}', Id_Proveedor ='{$p_provider}'";
-       $query  .=" WHERE Id_Productos ='{$product['Id_Productos']}'";
+       $query  .=" Nombre ='{$p_name}', Descripcion ='{$p_desc}', Precio ='{$p_price}', Id_Proveedor ='{$p_provider}', Id_Categoria ='{$p_cat}'";
+       $query  .=" WHERE ID ='{$product['ID']}'";
        $result = $db->query($query);
        
        if($result && $db->affected_rows() === 1){
          // Actualizar inventario
-         $query2 = "UPDATE inventario SET Cantidad ='{$p_qty}' WHERE Id_Producto ='{$product['Id_Productos']}'";
+         $query2 = "UPDATE inventario SET Cantidad ='{$p_qty}' WHERE Id_Producto ='{$product['ID']}'";
          if($db->query($query2)){
            $session->msg('s',"Producto actualizado exitosamente.");
            redirect('product.php', false);
          } else {
            // Manejo de errores detallado para la actualización del inventario
            $session->msg('d',' Error al actualizar el inventario: ' . $db->con->error);
-           redirect('edit_product.php?id='.$product['Id_Productos'], false);
+           redirect('edit_product.php?id='.$product['ID'], false);
          }
        } else {
          $session->msg('d',' Lo siento, actualización falló.');
-         redirect('edit_product.php?id='.$product['Id_Productos'], false);
+         redirect('edit_product.php?id='.$product['ID'], false);
        }
    } else{
        $session->msg("d", $errors);
-       redirect('edit_product.php?id='.$product['Id_Productos'], false);
+       redirect('edit_product.php?id='.$product['ID'], false);
    }
  }
 ?>
@@ -104,7 +83,8 @@ if(!$product){
       <div class="panel-body">
         <div class="row">
           <div class="col-md-4">
-            <!-- Vista previa de la imagen -->
+            <!-- Eliminada vista previa de la imagen y formulario de carga -->
+            <!--
             <div class="panel panel-default">
               <div class="panel-heading">
                 <strong>Imagen del Producto</strong>
@@ -120,10 +100,11 @@ if(!$product){
                 </div>
               </div>
             </div>
+            -->
           </div>
 
           <div class="col-md-8">
-            <form method="post" action="edit_product.php?id=<?php echo (int)$product['Id_Productos'] ?>" enctype="multipart/form-data">
+            <form method="post" action="edit_product.php?id=<?php echo (int)$product['ID'] ?>" enctype="multipart/form-data">
               <div class="form-group">
                 <label for="product-title">Nombre del Producto</label>
                 <div class="input-group">
@@ -147,15 +128,15 @@ if(!$product){
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label for="product-categorie">Categoría</label>
+                    <label for="product-category">Categoría</label>
                     <div class="input-group">
                       <span class="input-group-addon">
                         <i class="glyphicon glyphicon-list"></i>
                       </span>
-                      <select class="form-control" name="product-categorie" required>
+                      <select class="form-control" name="product-category" required>
                         <option value="">Selecciona una categoría</option>
                         <?php foreach ($all_categories as $cat): ?>
-                          <option value="<?php echo (int)$cat['id']; ?>" <?php if($product['Categoria'] === $cat['id']): echo "selected"; endif; ?>>
+                          <option value="<?php echo (int)$cat['id']; ?>" <?php if($product['Id_Categoria'] === $cat['id']): echo "selected"; endif; ?>>
                             <?php echo remove_junk($cat['name']); ?>
                           </option>
                         <?php endforeach; ?>
@@ -198,84 +179,12 @@ if(!$product){
                  </div>
                 <div class="col-md-3">
                    <div class="form-group">
-                    <label for="product-cost">Costo Unitario</label>
+                    <label for="product-price">Precio</label>
                     <div class="input-group">
                       <span class="input-group-addon">
                         <i class="glyphicon glyphicon-usd"></i>
                       </span>
-                      <input type="number" class="form-control" name="product-cost" id="product-cost" value="<?php echo remove_junk($product['Costo']);?>" step="0.01" required>
-                    </div>
-                  </div>
-                 </div>
-                  <div class="col-md-3">
-                   <div class="form-group">
-                    <label for="product-public-percent">% Público (Opcional)</label>
-                    <div class="input-group">
-                      <span class="input-group-addon">
-                        <i class="glyphicon glyphicon-percent"></i>
-                      </span>
-                      <input type="number" class="form-control" name="product-public-percent" id="product-public-percent" placeholder="Ej: 42" step="0.01">
-                    </div>
-                  </div>
-                 </div>
-                 <div class="col-md-3">
-                   <div class="form-group">
-                    <label for="product-installer-percent">% Instalador (Opcional)</label>
-                    <div class="input-group">
-                      <span class="input-group-addon">
-                        <i class="glyphicon glyphicon-percent"></i>
-                      </span>
-                      <input type="number" class="form-control" name="product-installer-percent" id="product-installer-percent" placeholder="Ej: 25" step="0.01">
-                    </div>
-                  </div>
-                 </div>
-              </div>
-
-               <div class="row">
-                  <div class="col-md-4">
-                   <div class="form-group">
-                    <label for="product-public-price">Precio Público</label>
-                    <div class="input-group">
-                      <span class="input-group-addon">
-                        <i class="glyphicon glyphicon-usd"></i>
-                      </span>
-                      <input type="number" class="form-control" name="product-public-price" id="product-public-price" value="<?php echo remove_junk($product['Precio_Publico']);?>" step="0.01">
-                    </div>
-                  </div>
-                 </div>
-                  <div class="col-md-4">
-                   <div class="form-group">
-                    <label for="product-installer-price">Precio Instalador</label>
-                    <div class="input-group">
-                      <span class="input-group-addon">
-                        <i class="glyphicon glyphicon-usd"></i>
-                      </span>
-                      <input type="number" class="form-control" name="product-installer-price" id="product-installer-price" value="<?php echo remove_junk($product['Precio_Instalador']);?>" step="0.01">
-                    </div>
-                  </div>
-                 </div>
-                 <div class="col-md-4">
-                   <div class="form-group">
-                    <label for="product-margin-utility">Margen de Utilidad (%)</label>
-                    <div class="input-group">
-                      <span class="input-group-addon">
-                        <i class="glyphicon glyphicon-percent"></i>
-                      </span>
-                      <input type="text" class="form-control" name="product-margin-utility" value="<?php echo number_format($product['Margen_Utilidad'], 2);?>" readonly>
-                    </div>
-                  </div>
-                 </div>
-              </div>
-
-              <div class="row">
-                 <div class="col-md-4">
-                   <div class="form-group">
-                    <label for="product-gain">Ganancia</label>
-                    <div class="input-group">
-                      <span class="input-group-addon">
-                        <i class="glyphicon glyphicon-usd"></i>
-                      </span>
-                      <input type="text" class="form-control" name="product-gain" value="<?php echo number_format($product['Ganancia'], 2);?>" readonly>
+                      <input type="number" class="form-control" name="product-price" id="product-price" value="<?php echo remove_junk($product['Precio']);?>" step="0.01" required>
                     </div>
                   </div>
                  </div>
@@ -351,65 +260,8 @@ if(!$product){
 
 <script>
 $(document).ready(function() {
-  // Script para la vista previa de la imagen
-  document.getElementById('product-photo').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        // Cambiar a background-image para el div de preview
-        document.querySelector('.product-image-preview').style.backgroundImage = 'url(' + e.target.result + ')';
-        document.querySelector('.product-image-preview').style.backgroundSize = 'contain';
-        document.querySelector('.product-image-preview').style.backgroundRepeat = 'no-repeat';
-        document.querySelector('.product-image-preview').style.backgroundPosition = 'center';
-      }
-      reader.readAsDataURL(file);
-    }
-  });
-
-  // Script para calcular precios basados en porcentaje y actualizar margen/ganancia
-  $('#product-cost, #product-public-percent, #product-installer-percent, #product-public-price').on('input', function() {
-    var cost = parseFloat($('#product-cost').val()) || 0;
-    var publicPercent = parseFloat($('#product-public-percent').val()) || 0;
-    var installerPercent = parseFloat($('#product-installer-percent').val()) || 0;
-    var publicPrice = parseFloat($('#product-public-price').val()) || 0; // Obtener el valor actual para recalcular margen/ganancia
-
-    // Calcular Precio Público si se introduce porcentaje y costo
-    if ($(this).attr('id') === 'product-cost' || $(this).attr('id') === 'product-public-percent') {
-       if (cost > 0 && publicPercent >= 0) {
-         publicPrice = cost * (1 + (publicPercent / 100));
-         $('#product-public-price').val(publicPrice.toFixed(2));
-       } else if (cost > 0 && publicPercent < 0) {
-            $('#product-public-price').val('');
-       } else {
-         $('#product-public-price').val('');
-       }
-    }
-
-    // Calcular Precio Instalador si se introduce porcentaje y costo
-    if ($(this).attr('id') === 'product-cost' || $(this).attr('id') === 'product-installer-percent') {
-       if (cost > 0 && installerPercent >= 0) {
-         var installerPrice = cost * (1 + (installerPercent / 100));
-         $('#product-installer-price').val(installerPrice.toFixed(2));
-       } else if (cost > 0 && installerPercent < 0) {
-            $('#product-installer-price').val('');
-       } else {
-         $('#product-installer-price').val('');
-       }
-    }
-
-    // Recalcular Margen de Utilidad y Ganancia si Costo o Precio Público cambian (ya sea por porcentaje o edición manual)
-    if (publicPrice > 0 && cost > 0) {
-        var marginUtility = ((publicPrice - cost) / publicPrice) * 100;
-        var gain = publicPrice - cost;
-        $('#product-margin-utility').val(marginUtility.toFixed(2));
-        $('#product-gain').val(gain.toFixed(2));
-    } else {
-       $('#product-margin-utility').val('0.00');
-       $('#product-gain').val('0.00');
-    }
-
-  });
+  // Script para calcular precios basados en porcentaje y actualizar margen/ganancia (Eliminado)
+  // No hay cálculo de margen/ganancia ni precios basados en porcentaje con la nueva estructura de BD
 });
 </script>
 

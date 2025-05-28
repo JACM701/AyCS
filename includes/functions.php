@@ -126,8 +126,9 @@ function read_date($str){
  * Función para generar fecha y hora actual
  * @return string Fecha y hora actual formateada
  */
-function make_date(){
-  return strftime("%Y-%m-%d %H:%M:%S", time());
+function make_date()
+{
+  return date("Y-m-d H:i:s");
 }
 
 /**

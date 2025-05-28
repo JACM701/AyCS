@@ -56,15 +56,15 @@
     </header>
 
     <div class="sidebar">
-      <?php if(isset($user['user_level']) && $user['user_level'] === '1'): // Verificar si user_level existe y es 1 ?>
+      <?php if(isset($user['Id_Rol']) && $user['Id_Rol'] === '1'): // Verificar si Id_Rol existe y es 1 ?>
         <!-- admin menu -->
       <?php include_once('admin_menu.php');?>
 
-      <?php elseif(isset($user['user_level']) && $user['user_level'] === '2'): // Verificar si user_level existe y es 2 ?>
+      <?php elseif(isset($user['Id_Rol']) && $user['Id_Rol'] === '2'): // Verificar si Id_Rol existe y es 2 ?>
         <!-- Special user -->
       <?php include_once('special_menu.php');?>
 
-      <?php elseif(isset($user['user_level']) && $user['user_level'] === '3'): // Verificar si user_level existe y es 3 ?>
+      <?php elseif(isset($user['Id_Rol']) && $user['Id_Rol'] === '3'): // Verificar si Id_Rol existe y es 3 ?>
         <!-- User menu -->
       <?php include_once('user_menu.php');?>
 
