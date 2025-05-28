@@ -5,10 +5,10 @@
   page_require_level(1);
 
   // Obtener todas las cotizaciones
-  $sql = "SELECT q.*, c.Nombre as ClienteNombre, c.Apellido as ClienteApellido 
-          FROM quotes q 
-          LEFT JOIN clientes c ON q.client_id = c.Id_Cliente 
-          ORDER BY q.quote_date DESC";
+  $sql = "SELECT q.ID, q.Id_Cliente, q.Fecha, c.Nombre as ClienteNombre 
+          FROM cotizacion q 
+          LEFT JOIN cliente c ON q.Id_Cliente = c.ID 
+          ORDER BY q.Fecha DESC";
   $quotes = find_by_sql($sql);
 ?>
 
@@ -39,10 +39,6 @@
               <th class="text-center" style="width: 50px;">#</th>
               <th>Cliente</th>
               <th>Fecha</th>
-              <th>Tipo</th>
-              <th class="text-center">Subtotal</th>
-              <th class="text-center">Descuento</th>
-              <th class="text-center">Total</th>
               <th class="text-center" style="width: 100px;">Acciones</th>
             </tr>
           </thead>
@@ -52,24 +48,20 @@
                 <td class="text-center"><?php echo count_id(); ?></td>
                 <td>
                   <?php 
-                    if($quote['client_id']) {
-                      echo remove_junk($quote['ClienteNombre'] . ' ' . $quote['ClienteApellido']);
+                    if(isset($quote['ClienteNombre'])) {
+                      echo remove_junk($quote['ClienteNombre']);
                     } else {
-                      echo remove_junk($quote['client_name']);
+                      echo 'Cliente Desconocido';
                     }
                   ?>
                 </td>
-                <td><?php echo read_date($quote['quote_date']); ?></td>
-                <td><?php echo remove_junk($quote['quote_type']); ?></td>
-                <td class="text-center">$<?php echo number_format($quote['subtotal'], 2); ?></td>
-                <td class="text-center"><?php echo $quote['discount_percentage']; ?>%</td>
-                <td class="text-center">$<?php echo number_format($quote['total_amount'], 2); ?></td>
+                <td><?php echo read_date($quote['Fecha']); ?></td>
                 <td class="text-center">
                   <div class="btn-group">
-                    <a href="edit_quote.php?id=<?php echo (int)$quote['id'];?>" class="btn btn-info btn-xs" title="Editar" data-toggle="tooltip">
+                    <a href="edit_quote.php?id=<?php echo (int)$quote['ID'];?>" class="btn btn-info btn-xs" title="Editar" data-toggle="tooltip">
                       <span class="glyphicon glyphicon-edit"></span>
                     </a>
-                    <a href="delete_quote.php?id=<?php echo (int)$quote['id'];?>" class="btn btn-danger btn-xs" title="Eliminar" data-toggle="tooltip" onclick="return confirm('¿Estás seguro de eliminar esta cotización?');">
+                    <a href="delete_quote.php?id=<?php echo (int)$quote['ID'];?>" class="btn btn-danger btn-xs" title="Eliminar" data-toggle="tooltip" onclick="return confirm('¿Estás seguro de eliminar esta cotización?');">
                       <span class="glyphicon glyphicon-trash"></span>
                     </a>
                   </div>

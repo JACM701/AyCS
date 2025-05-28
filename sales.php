@@ -8,13 +8,15 @@
 ?>
 <?php
 // Obtener todas las ventas con información relacionada
-$sql = "SELECT v.*, c.Nombre as ClienteNombre, c.Apellido as ClienteApellido, 
-        p.Nombre as ProductoNombre, s.Nombre as ServicioNombre, s.Costo as ServicioCosto,
-        p.Precio as ProductoPrecio
+$sql = "SELECT v.*, c.Nombre as ClienteNombre,
+        dv.Cantidad as detalle_cantidad, dv.Precio as detalle_precio,
+        p.Nombre as ProductoNombre,
+        s.Nombre as ServicioNombre, s.Costo as ServicioCosto
         FROM venta v
-        LEFT JOIN clientes c ON v.Id_Cliente = c.Id_Cliente
-        LEFT JOIN producto p ON v.Id_Productos = p.ID
-        LEFT JOIN servicio s ON v.Id_Servicio = s.ID
+        LEFT JOIN cliente c ON v.Id_Cliente = c.ID
+        LEFT JOIN detalle_venta dv ON v.ID = dv.Id_Venta
+        LEFT JOIN producto p ON dv.Id_Producto = p.ID
+        LEFT JOIN servicio s ON dv.Id_Servicio = s.ID
         ORDER BY v.Fecha DESC";
 $sales = find_by_sql($sql);
 ?>
@@ -61,21 +63,21 @@ $sales = find_by_sql($sql);
                <!-- Número de registro -->
                <td class="text-center"><?php echo count_id();?></td>
                <!-- Nombre del cliente -->
-               <td><?php echo remove_junk($sale['ClienteNombre'] . ' ' . $sale['ClienteApellido']); ?></td>
+               <td><?php echo remove_junk($sale['ClienteNombre']); ?></td>
                <!-- Nombre del producto -->
                <td><?php echo remove_junk($sale['ProductoNombre']); ?></td>
                <!-- Nombre del servicio -->
                <td><?php echo remove_junk($sale['ServicioNombre']); ?></td>
                <!-- Precio total -->
                <td class="text-center">
-                 <?php 
-                   $precio = 0;
-                   if (isset($sale['ProductoNombre'])) {
-                     $precio = $sale['ProductoPrecio'];
-                   } elseif (!empty($sale['ServicioCosto'])) {
-                     $precio = $sale['ServicioCosto'];
+                 <?php
+                   $precio_unitario = 0;
+                   if (!empty($sale['ProductoNombre'])) {
+                     $precio_unitario = $sale['detalle_precio']; // Usar el precio del detalle si es producto
+                   } elseif (!empty($sale['ServicioNombre'])) {
+                     $precio_unitario = $sale['ServicioCosto']; // Usar el costo del servicio si es servicio
                    }
-                   echo remove_junk(number_format($precio, 2));
+                   echo remove_junk(number_format($precio_unitario, 2));
                  ?>
                </td>
                <!-- Fecha de la venta -->

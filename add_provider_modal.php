@@ -10,11 +10,10 @@
     if (empty($errors)) {
       $name   = remove_junk($db->escape($_POST['provider-name']));
       $number = remove_junk($db->escape($_POST['provider-number']));
-      $email  = remove_junk($db->escape($_POST['provider-email']));
       $rfc    = remove_junk($db->escape($_POST['provider-rfc']));
 
-      $query = "INSERT INTO proveedores (Nombre, Número, Correo, RFC) 
-                VALUES ('{$name}', '{$number}', '{$email}', '{$rfc}')";
+      $query = "INSERT INTO proveedor (Nombre, Telefono, RFC) 
+                VALUES ('{$name}', '{$number}', '{$rfc}')";
 
       if ($db->query($query)) {
         $session->msg('s', "Proveedor agregado exitosamente.");

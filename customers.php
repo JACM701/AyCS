@@ -2,7 +2,7 @@
   require_once('includes/load.php');
   page_require_level(2);
 
-  $all_customers = find_all('clientes');
+  $all_customers = find_all('cliente');
 ?>
 <?php include_once('layouts/header.php'); ?>
 

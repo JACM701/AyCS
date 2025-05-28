@@ -6,8 +6,8 @@
 ?>
 <?php
 $product = find_by_id('producto',(int)$_GET['id']);
-$all_categories = find_all('categories');
-$all_providers = find_all('proveedores');
+$all_categories = find_all('categoria_producto');
+$all_providers = find_all('proveedor');
 
 // Obtener la cantidad del inventario
 $sql = "SELECT i.Cantidad FROM inventario i WHERE i.Id_Producto = '{$product['ID']}'";
@@ -136,8 +136,8 @@ if(!$product){
                       <select class="form-control" name="product-category" required>
                         <option value="">Selecciona una categoría</option>
                         <?php foreach ($all_categories as $cat): ?>
-                          <option value="<?php echo (int)$cat['id']; ?>" <?php if($product['Id_Categoria'] === $cat['id']): echo "selected"; endif; ?>>
-                            <?php echo remove_junk($cat['name']); ?>
+                          <option value="<?php echo (int)$cat['ID']; ?>" <?php if($product['Id_Categoria'] === $cat['ID']): echo "selected"; endif; ?>>
+                            <?php echo remove_junk($cat['Nombre']); ?>
                           </option>
                         <?php endforeach; ?>
                       </select>

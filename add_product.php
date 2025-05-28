@@ -4,22 +4,21 @@
   page_require_level(2);
 
   // Obtener proveedores y categorías
-  $providers = find_all('proveedores');
-  $categories = find_all('categories');
+  $providers = find_all('proveedor');
+  $categories = find_all('categoria_producto');
 
   // Registro de proveedor
   if (isset($_POST['add_provider'])) {
-    $req_fields = array('provider-name', 'provider-number', 'provider-email', 'provider-rfc');
+    $req_fields = array('provider-name', 'provider-number', 'provider-rfc');
     validate_fields($req_fields);
 
     if (empty($errors)) {
       $name   = remove_junk($db->escape($_POST['provider-name']));
       $number = remove_junk($db->escape($_POST['provider-number']));
-      $email  = remove_junk($db->escape($_POST['provider-email']));
       $rfc    = remove_junk($db->escape($_POST['provider-rfc']));
 
-      $query = "INSERT INTO proveedores (Nombre, Número, Correo, RFC) 
-                VALUES ('{$name}', '{$number}', '{$email}', '{$rfc}')";
+      $query = "INSERT INTO proveedor (Nombre, Telefono, RFC) 
+                VALUES ('{$name}', '{$number}', '{$rfc}')";
 
       if ($db->query($query)) {
         $session->msg('s', "Proveedor agregado exitosamente.");
@@ -193,10 +192,6 @@
           <div class="form-group">
             <label for="provider-number">Número de teléfono</label>
             <input type="text" class="form-control" name="provider-number" placeholder="Número de teléfono" required>
-          </div>
-          <div class="form-group">
-            <label for="provider-email">Correo electrónico</label>
-            <input type="email" class="form-control" name="provider-email" placeholder="Correo electrónico" required>
           </div>
           <div class="form-group">
              <label for="provider-rfc">RFC</label>

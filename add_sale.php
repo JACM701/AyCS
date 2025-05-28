@@ -5,18 +5,17 @@
 
   // Registrar cliente
   if (isset($_POST['add_cliente'])) {
-    $req_fields = array('nombre', 'apellido', 'correo', 'numero', 'direccion');
+    $req_fields = array('nombre', 'correo', 'direccion');
     validate_fields($req_fields);
 
     if (empty($errors)) {
       $nombre = $db->escape($_POST['nombre']);
-      $apellido = $db->escape($_POST['apellido']);
       $correo = $db->escape($_POST['correo']);
       $numero = $db->escape($_POST['numero']);
       $direccion = $db->escape($_POST['direccion']);
 
-      $sql = "INSERT INTO clientes (Nombre, Apellido, Correo, Numero, Direccion) 
-              VALUES ('{$nombre}', '{$apellido}', '{$correo}', '{$numero}', '{$direccion}')";
+      $sql = "INSERT INTO cliente (Nombre, Correo, Direccion) 
+              VALUES ('{$nombre}', '{$correo}', '{$direccion}')";
 
       if ($db->query($sql)) {
         $session->msg("s", "Cliente registrado exitosamente");
@@ -84,16 +83,8 @@
             <input type="text" class="form-control" name="nombre" required>
           </div>
           <div class="form-group">
-            <label>Apellido</label>
-            <input type="text" class="form-control" name="apellido" required>
-          </div>
-          <div class="form-group">
             <label>Correo</label>
             <input type="email" class="form-control" name="correo" required>
-          </div>
-          <div class="form-group">
-            <label>Numero</label>
-            <input type="text" class="form-control" name="numero" required>
           </div>
           <div class="form-group">
             <label>Dirección</label>
@@ -120,10 +111,10 @@
             <select class="form-control" name="cliente_id" required>
               <option value="">Seleccione un cliente</option>
               <?php 
-              $clientes = find_all('clientes');
+              $clientes = find_all('cliente');
               foreach ($clientes as $cliente): ?>
-                <option value="<?php echo $cliente['Id_Cliente']; ?>">
-                  <?php echo $cliente['Nombre'] . ' ' . $cliente['Apellido']; ?>
+                <option value="<?php echo $cliente['ID']; ?>">
+                  <?php echo $cliente['Nombre']; ?>
                 </option>
               <?php endforeach; ?>
             </select>
