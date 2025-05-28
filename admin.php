@@ -7,34 +7,35 @@
   page_require_level(1);
 
   // Obtener conteos de diferentes entidades
-  $c_clientes     = count_by_id('clientes');    // Total de clientes
+  $c_clientes     = count_by_id('cliente');    // Total de clientes
   $c_productos    = count_by_id('productos');   // Total de productos
   $c_ventas       = count_by_id('venta');       // Total de ventas
   $c_servicios    = count_by_id('servicio');    // Total de servicios
 
-  // Obtener datos para el dashboard
-  $sql_ventas_recientes = "SELECT v.*, c.Nombre as ClienteNombre, c.Apellido as ClienteApellido, 
+  // Obtener datos para el dashboard - Últimas Ventas
+  $sql_ventas_recientes = "SELECT v.*, c.Nombre as ClienteNombre, 
                           p.Nombre as ProductoNombre, s.Nombre as ServicioNombre, s.Costo as ServicioCosto,
-                          p.Costo as ProductoCosto
+                          p.Precio as ProductoPrecio, dv.Cantidad as detalle_cantidad, dv.Precio as detalle_precio
                           FROM venta v
-                          LEFT JOIN clientes c ON v.Id_Cliente = c.Id_Cliente
-                          LEFT JOIN productos p ON v.Id_Productos = p.Id_Productos
-                          LEFT JOIN servicio s ON v.Id_Servicio = s.Id_Servicio
+                          LEFT JOIN cliente c ON v.Id_Cliente = c.ID
+                          LEFT JOIN detalle_venta dv ON v.ID = dv.Id_Venta -- Unir con detalle_venta
+                          LEFT JOIN producto p ON dv.Id_Producto = p.ID -- Unir detalle_venta con producto
+                          LEFT JOIN servicio s ON dv.Id_Servicio = s.ID -- Unir detalle_venta con servicio
                           ORDER BY v.Fecha DESC LIMIT 5";
   $recent_sales = find_by_sql($sql_ventas_recientes);
 
   // Productos recientes
   $sql_productos_recientes = "SELECT p.*, i.Cantidad 
-                             FROM productos p 
-                             LEFT JOIN inventario i ON p.Id_Productos = i.Id_Producto 
-                             ORDER BY p.Id_Productos DESC LIMIT 5";
+                             FROM producto p
+                             LEFT JOIN inventario i ON p.ID = i.Id_Producto 
+                             ORDER BY p.ID DESC LIMIT 5";
   $recent_products = find_by_sql($sql_productos_recientes);
 
   // Productos más vendidos
-  $sql_productos_vendidos = "SELECT p.Nombre, COUNT(v.Id_Productos) as total_vendido
-                            FROM productos p
-                            LEFT JOIN venta v ON p.Id_Productos = v.Id_Productos
-                            GROUP BY p.Id_Productos
+  $sql_productos_vendidos = "SELECT p.Nombre, COUNT(dv.Id_Producto) as total_vendido
+                            FROM producto p
+                            LEFT JOIN detalle_venta dv ON p.ID = dv.Id_Producto
+                            GROUP BY p.ID
                             ORDER BY total_vendido DESC
                             LIMIT 5";
   $products_sold = find_by_sql($sql_productos_vendidos);
@@ -127,23 +128,49 @@
             </tr>
           </thead>
           <tbody>
-            <?php foreach ($recent_sales as $sale): ?>
+            <?php foreach ($recent_sales as $sale_item): ?>
+              <?php
+                // Asegurarse de que $sale_item es un array válido. Si no, saltar.
+                if (!is_array($sale_item)) {
+                    continue;
+                }
+                // Usar una variable $sale_data para mayor claridad
+                $sale_data = $sale_item;
+              ?>
               <tr>
                 <td class="text-center"><?= count_id(); ?></td>
                 <td>
-                  <a href="edit_sale.php?id=<?= (int)$sale['Folio'];?>">
-                    <?= remove_junk($sale['ClienteNombre'] . ' ' . $sale['ClienteApellido']); ?>
+                  <a href="edit_sale.php?id=<?= (int)($sale_data['Folio'] ?? 0);?>">
+                    <?= remove_junk((string)($sale_data['ClienteNombre'] ?? 'Cliente Desconocido')); ?>
                   </a>
                 </td>
                 <td>
                   <?php 
                     $total = 0;
-                    if($sale['ProductoNombre']) $total += $sale['ProductoCosto'];
-                    if($sale['ServicioNombre']) $total += $sale['ServicioCosto'];
+                    
+                    // Obtener valores de forma segura, usando 0 o null si son null o no existen
+                    $producto_nombre = $sale_data['ProductoNombre'] ?? null;
+                    $detalle_cantidad = $sale_data['detalle_cantidad'] ?? 0;
+                    $detalle_precio = $sale_data['detalle_precio'] ?? 0;
+                    $servicio_nombre = $sale_data['ServicioNombre'] ?? null;
+                    $servicio_costo = $sale_data['ServicioCosto'] ?? 0;
+
+                    // Asegurar que cantidad y precio sean numéricos antes de multiplicar
+                    $detalle_cantidad = is_numeric($detalle_cantidad) ? (float) $detalle_cantidad : 0;
+                    $detalle_precio = is_numeric($detalle_precio) ? (float) $detalle_precio : 0;
+                    $servicio_costo = is_numeric($servicio_costo) ? (float) $servicio_costo : 0;
+
+                    // Sumar el precio del producto * cantidad si existe un producto
+                    if ($producto_nombre !== null) {
+                         $total += $detalle_precio * $detalle_cantidad;
+                    } elseif ($servicio_nombre !== null) { // Sumar el costo del servicio si existe un servicio
+                         $total += $servicio_costo;
+                    }
+                    
                     echo '$' . number_format($total, 2);
                   ?>
                 </td>
-                <td><?= $sale['Fecha']; ?></td>
+                <td><?= $sale_data['Fecha'] ?? ''; ?></td>
               </tr>
             <?php endforeach; ?>
           </tbody>
@@ -164,7 +191,7 @@
       <div class="panel-body">
         <div class="list-group">
           <?php foreach ($recent_products as $product): ?>
-            <a class="list-group-item clearfix" href="edit_product.php?id=<?= (int)$product['Id_Productos'];?>">
+            <a class="list-group-item clearfix" href="edit_product.php?id=<?= (int)$product['ID'];?>">
               <h4 class="list-group-item-heading">
                 <?php if ($product['Foto']): ?>
                   <img class="img-avatar img-circle" src="uploads/products/<?= $product['Foto']; ?>" alt="">

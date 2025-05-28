@@ -41,10 +41,10 @@
               <td><?php echo remove_junk($customer['Direccion']); ?></td>
               <td class="text-center">
                 <div class="btn-group">
-                  <a href="edit_customer.php?id=<?php echo (int)$customer['Id_Cliente'];?>" class="btn btn-xs btn-warning" data-toggle="tooltip" title="Editar">
+                  <a href="edit_customer.php?id=<?php echo (int)$customer['ID'];?>" class="btn btn-xs btn-warning" data-toggle="tooltip" title="Editar">
                     <i class="glyphicon glyphicon-pencil"></i>
                   </a>
-                  <a href="delete_customer.php?id=<?php echo (int)$customer['Id_Cliente'];?>" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Eliminar">
+                  <a href="delete_customer.php?id=<?php echo (int)$customer['ID'];?>" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Eliminar">
                     <i class="glyphicon glyphicon-trash"></i>
                   </a>
                 </div>

@@ -3,11 +3,11 @@
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'newaycs');
+define('DB_NAME', 'naycs');
 
 // Configuración de la aplicación
-define('APP_NAME', 'AyCS - Inventario');
-define('APP_URL', 'http://localhost/AYCS2');
+define('APP_NAME', 'NayCS - Inventario');
+define('APP_URL', 'http://localhost/NayCS');
 define('APP_ROOT', dirname(dirname(__FILE__)));
 
 // Configuración de rutas

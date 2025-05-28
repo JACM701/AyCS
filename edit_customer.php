@@ -22,7 +22,7 @@
 
       $query  = "UPDATE clientes SET ";
       $query .= "Nombre='{$name}', Numero='{$phone}', Correo='{$email}', Direccion='{$address}'";
-      $query .= " WHERE Id_Cliente='{$customer['Id_Cliente']}'";
+      $query .= " WHERE ID='{$customer['ID']}'";
       
       if($db->query($query)){
         $session->msg('s',"Cliente actualizado exitosamente.");
@@ -52,7 +52,7 @@
       </div>
       <div class="panel-body">
         <div class="col-md-12">
-          <form method="post" action="edit_customer.php?id=<?php echo (int)$customer['Id_Cliente'] ?>" class="clearfix">
+          <form method="post" action="edit_customer.php?id=<?php echo (int)$customer['ID'] ?>" class="clearfix">
             <div class="form-group">
               <div class="input-group">
                 <span class="input-group-addon">

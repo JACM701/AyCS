@@ -10,11 +10,11 @@
 // Obtener todas las ventas con información relacionada
 $sql = "SELECT v.*, c.Nombre as ClienteNombre, c.Apellido as ClienteApellido, 
         p.Nombre as ProductoNombre, s.Nombre as ServicioNombre, s.Costo as ServicioCosto,
-        p.Costo as ProductoCosto
+        p.Precio as ProductoPrecio
         FROM venta v
         LEFT JOIN clientes c ON v.Id_Cliente = c.Id_Cliente
-        LEFT JOIN productos p ON v.Id_Productos = p.Id_Productos
-        LEFT JOIN servicio s ON v.Id_Servicio = s.Id_Servicio
+        LEFT JOIN producto p ON v.Id_Productos = p.ID
+        LEFT JOIN servicio s ON v.Id_Servicio = s.ID
         ORDER BY v.Fecha DESC";
 $sales = find_by_sql($sql);
 ?>
@@ -70,8 +70,8 @@ $sales = find_by_sql($sql);
                <td class="text-center">
                  <?php 
                    $precio = 0;
-                   if (!empty($sale['ProductoCosto'])) {
-                     $precio = $sale['ProductoCosto'];
+                   if (isset($sale['ProductoNombre'])) {
+                     $precio = $sale['ProductoPrecio'];
                    } elseif (!empty($sale['ServicioCosto'])) {
                      $precio = $sale['ServicioCosto'];
                    }
@@ -84,11 +84,11 @@ $sales = find_by_sql($sql);
                <td class="text-center">
                   <div class="btn-group">
                      <!-- Botón para editar venta -->
-                     <a href="edit_sale.php?id=<?php echo (int)$sale['Folio'];?>" class="btn btn-warning btn-xs"  title="Editar" data-toggle="tooltip">
+                     <a href="edit_sale.php?id=<?php echo (int)$sale['ID'];?>" class="btn btn-warning btn-xs"  title="Editar" data-toggle="tooltip">
                        <span class="glyphicon glyphicon-edit"></span>
                      </a>
                      <!-- Botón para eliminar venta -->
-                     <a href="delete_sale.php?id=<?php echo (int)$sale['Folio'];?>" class="btn btn-danger btn-xs"  title="Eliminar" data-toggle="tooltip">
+                     <a href="delete_sale.php?id=<?php echo (int)$sale['ID'];?>" class="btn btn-danger btn-xs"  title="Eliminar" data-toggle="tooltip">
                        <span class="glyphicon glyphicon-trash"></span>
                      </a>
                   </div>

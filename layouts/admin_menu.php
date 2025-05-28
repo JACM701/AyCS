@@ -22,8 +22,8 @@
       <span>Configuración</span>
     </a>
     <ul class="nav submenu">
-      <li><a href="group.php">Grupos de usuarios</a></li>
-      <li><a href="users.php">Usuarios</a></li>
+      <!-- <li><a href="group.php">Grupos de usuarios</a></li> -->
+      <!-- <li><a href="users.php">Usuarios</a></li> -->
       <li><a href="categorie.php">Categorías</a></li>
     </ul>
   </li>

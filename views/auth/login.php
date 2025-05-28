@@ -12,19 +12,19 @@ $title = "Iniciar Sesión";
         
         <?php echo display_msg($msg); ?>
         
-        <form method="post" action="index.php?controller=auth&action=login" class="clearfix">
+        <form method="post" action="auth.php" class="clearfix">
             <div class="form-group">
                 <label for="username" class="control-label">Usuario</label>
-                <input type="text" class="form-control" name="username" placeholder="Usuario">
+                <input type="text" class="form-control" name="username" placeholder="Usuario" required>
             </div>
             
             <div class="form-group">
                 <label for="password" class="control-label">Contraseña</label>
-                <input type="password" class="form-control" name="password" placeholder="Contraseña">
+                <input type="password" class="form-control" name="password" placeholder="Contraseña" required>
             </div>
             
             <div class="form-group">
-                <button type="submit" class="btn btn-primary btn-block">Iniciar Sesión</button>
+                <button type="submit" name="login" class="btn btn-primary btn-block">Iniciar Sesión</button>
             </div>
         </form>
     </div>

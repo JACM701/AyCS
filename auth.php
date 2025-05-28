@@ -1,34 +1,44 @@
 <?php include_once('includes/load.php'); ?>
 <?php
-$req_fields = array('username','password' );
-validate_fields($req_fields);
-$username = remove_junk($_POST['username']);
-$password = remove_junk($_POST['password']);
+require_once('includes/load.php');
 
-if(empty($errors)){
-  $user = authenticate_v2($username, $password);
-  if($user):
-     //create session with id
-     $session->login($user['id']);
-     //Update Sign in time
-     updateLastLogIn($user['id']);
-     // redirect user to group home page by user level
-     if($user['user_level'] === '1'):
-       $session->msg("s", "Hola ".$user['username'].", Bienvenido a AyCS INV.");
-       redirect('home.php',false);
-     elseif ($user['user_level'] === '2'):
-        $session->msg("s", "Hola ".$user['username'].", Bienvenido a AyCS INV.");
-       redirect('home.php',false);
-     else:
-        $session->msg("s", "Hola ".$user['username'].", Bienvenido a AyCS INV.");
-       redirect('home.php',false);
-     endif;
-  else:
-    $session->msg("d", "Usuario o contraseña incorrectos.");
-    redirect('index.php',false);
-  endif;
-} else {
-   $session->msg("d", $errors);
-   redirect('index.php',false);
+if(isset($_POST['login'])){
+    $username = remove_junk($db->escape($_POST['username']));
+    $password = remove_junk($db->escape($_POST['password']));
+
+    // Debug: Mostrar los valores recibidos
+    error_log("Intento de login - Usuario: " . $username);
+
+    if(empty($username) || empty($password)){
+        $session->msg("d", "Por favor ingrese usuario y contraseña");
+        redirect('index.php', false);
+    }
+
+    // Intentar autenticar usando authenticate_v2
+    $user = authenticate_v2($username, $password);
+    
+    if($user){
+        // Debug: Mostrar información del usuario autenticado
+        error_log("Usuario autenticado - ID: " . $user['ID'] . ", Rol: " . $user['Id_Rol']);
+        
+        $session->login($user['ID']);
+        updateLastLogIn($user['ID']);
+        
+        if($user['Id_Rol'] === '1'){
+            $session->msg("s", "Bienvenido al Panel de Administración");
+            redirect('admin.php', false);
+        } elseif($user['Id_Rol'] === '2'){
+            $session->msg("s", "Bienvenido al Panel de Usuario Especial");
+            redirect('special_dashboard.php', false);
+        } else {
+            $session->msg("s", "Bienvenido al Panel de Usuario");
+            redirect('home.php', false);
+        }
+    } else {
+        // Debug: Mostrar error de autenticación
+        error_log("Error de autenticación para usuario: " . $username);
+        $session->msg("d", "Usuario o contraseña incorrectos");
+        redirect('index.php', false);
+    }
 }
 ?>

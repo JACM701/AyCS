@@ -5,7 +5,7 @@
 ?>
 <?php
   $product_id = (int)$_GET['id'];
-  $product = find_by_id('productos', $product_id);
+  $product = find_by_id('producto', $product_id);
   
   if(!$product){
     $session->msg("d","ID de producto no encontrado.");
@@ -36,7 +36,7 @@
 
         if($delete_inventory){
           // Luego eliminar el producto de la tabla productos
-          $delete_product = delete_by_id('productos', $product_id); // Usará Id_Productos
+          $delete_product = delete_by_id('producto', $product_id); // Cambiado de 'productos' a 'producto'
 
           if($delete_product){
             // Eliminar la imagen si existe
@@ -81,7 +81,7 @@
 
     if ($total_ventas === 0) {
         // Si no hay inventario ni ventas, eliminamos el producto y la imagen
-        $delete_product = delete_by_id('productos', $product_id); // Usará Id_Productos
+        $delete_product = delete_by_id('producto', $product_id); // Cambiado de 'productos' a 'producto'
         if ($delete_product) {
             // Eliminar la imagen si existe
             if ($product['Foto'] && $product['Foto'] != 'no_image.jpg') {

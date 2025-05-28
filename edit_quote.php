@@ -17,16 +17,16 @@
   $clientes = find_by_sql($sql);
 
   // Obtener lista de productos (corregido el nombre de la tabla y columnas)
-  $sql = "SELECT p.Id_Productos, p.Nombre, p.Costo, c.name as category_name 
-          FROM productos p 
-          LEFT JOIN categories c ON p.Categoria = c.id 
+  $sql = "SELECT p.ID, p.Nombre, p.Precio, c.name as category_name 
+          FROM producto p 
+          LEFT JOIN categories c ON p.Id_Categoria = c.id 
           ORDER BY p.Nombre";
   $products = find_by_sql($sql);
 
   // Obtener items de la cotización (corregido el nombre de la tabla y columnas)
-  $sql = "SELECT qi.*, p.Nombre as product_name, p.Costo as sale_price 
+  $sql = "SELECT qi.*, p.Nombre as product_name, p.Precio as sale_price 
           FROM quote_items qi 
-          LEFT JOIN productos p ON qi.product_id = p.Id_Productos 
+          LEFT JOIN producto p ON qi.product_id = p.ID 
           WHERE qi.quote_id = {$quote_id}";
   $quote_items = find_by_sql($sql);
 ?>
@@ -96,10 +96,10 @@
                             <select class="form-control" name="product_id[]">
                               <option value="">Seleccione producto</option>
                               <?php foreach($products as $product): ?>
-                                <option value="<?php echo (int)$product['Id_Productos']; ?>" 
-                                        data-price="<?php echo $product['Costo']; ?>"
-                                        <?php if($product['Id_Productos'] == $item['product_id']) echo 'selected'; ?>>
-                                  <?php echo remove_junk($product['Nombre']); ?> - $<?php echo number_format($product['Costo'], 2); ?>
+                                <option value="<?php echo (int)$product['ID']; ?>" 
+                                        data-price="<?php echo $product['Precio']; ?>"
+                                        <?php if(isset($item['product_id']) && $item['product_id'] === $product['ID']) echo 'selected'; ?>>
+                                  <?php echo remove_junk($product['Nombre']); ?> - $<?php echo number_format($product['Precio'], 2); ?>
                                 </option>
                               <?php endforeach; ?>
                             </select>
@@ -140,9 +140,9 @@
                         <select class="form-control" name="product_id[]" id="product_id_template">
                           <option value="">Seleccione producto</option>
                           <?php foreach($products as $product): ?>
-                            <option value="<?php echo (int)$product['Id_Productos']; ?>" 
-                                    data-price="<?php echo $product['Costo']; ?>">
-                              <?php echo remove_junk($product['Nombre']); ?> - $<?php echo number_format($product['Costo'], 2); ?>
+                            <option value="<?php echo (int)$product['ID']; ?>" 
+                                    data-price="<?php echo $product['Precio']; ?>">
+                              <?php echo remove_junk($product['Nombre']); ?> - $<?php echo number_format($product['Precio'], 2); ?>
                             </option>
                           <?php endforeach; ?>
                         </select>
@@ -263,9 +263,9 @@ $(document).ready(function() {
             <select class="form-control" name="product_id[]">
               <option value="">Seleccione producto</option>
               <?php foreach($products as $product): ?>
-                <option value="<?php echo (int)$product['Id_Productos']; ?>" 
-                        data-price="<?php echo $product['Costo']; ?>">
-                  <?php echo remove_junk($product['Nombre']); ?> - $<?php echo number_format($product['Costo'], 2); ?>
+                <option value="<?php echo (int)$product['ID']; ?>" 
+                        data-price="<?php echo $product['Precio']; ?>">
+                  <?php echo remove_junk($product['Nombre']); ?> - $<?php echo number_format($product['Precio'], 2); ?>
                 </option>
               <?php endforeach; ?>
             </select>

@@ -60,7 +60,7 @@
         $p_photo = upload_image($_FILES['product-photo'], 'uploads/products/');
       }
 
-      $query  = "INSERT INTO productos (";
+      $query  = "INSERT INTO producto (";
       $query .= "Nombre, Descripcion, Costo, Precio_Publico, Precio_Instalador, Margen_Utilidad, Ganancia, Foto, Id_Proveedor, Categoria)";
       $query .= " VALUES (";
       $query .= "'{$p_name}', '{$p_desc}', '{$p_cost}', '{$p_public_price}', '{$p_installer_price}', ";

@@ -11,8 +11,8 @@ class Session {
    $this->userLoginSetup();
  }
 
-  public function isUserLoggedIn(){
-    return $this->user_is_logged_in;
+  public function isUserLoggedIn($value=""){
+    return isset($_SESSION['user_id']);
   }
   public function login($user_id){
     $_SESSION['user_id'] = $user_id;
@@ -50,6 +50,10 @@ class Session {
     } else {
       $this->msg;
     }
+  }
+
+  private function sread($name){
+    // ... existing code ...
   }
 }
 

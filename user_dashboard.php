@@ -59,11 +59,11 @@
             <?php
             $sql_ventas_recientes = "SELECT v.*, c.Nombre as ClienteNombre, c.Apellido as ClienteApellido, 
                                    p.Nombre as ProductoNombre, s.Nombre as ServicioNombre, s.Costo as ServicioCosto,
-                                   p.Costo as ProductoCosto
+                                   p.Precio as ProductoPrecio
                                    FROM venta v
                                    LEFT JOIN clientes c ON v.Id_Cliente = c.Id_Cliente
-                                   LEFT JOIN productos p ON v.Id_Productos = p.Id_Productos
-                                   LEFT JOIN servicio s ON v.Id_Servicio = s.Id_Servicio
+                                   LEFT JOIN producto p ON v.Id_Productos = p.ID
+                                   LEFT JOIN servicio s ON v.Id_Servicio = s.ID
                                    ORDER BY v.Fecha DESC LIMIT 5";
             $recent_sales = find_by_sql($sql_ventas_recientes);
             
@@ -78,8 +78,8 @@
                 <td>
                   <?php 
                     $total = 0;
-                    if($sale['ProductoNombre']) $total += $sale['ProductoCosto'];
-                    if($sale['ServicioNombre']) $total += $sale['ServicioCosto'];
+                    if(isset($sale['ProductoNombre'])) $total += $sale['ProductoPrecio'];
+                    if(isset($sale['ServicioNombre'])) $total += $sale['ServicioCosto'];
                     echo '$' . number_format($total, 2);
                   ?>
                 </td>

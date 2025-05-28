@@ -63,16 +63,18 @@ function validate_fields($var){
  * @param array $msg Array con mensajes a mostrar
  * @return string HTML con los mensajes formateados
  */
-function display_msg($msg =''){
+function display_msg($msg ='')
+{
    $output = array();
-   if(!empty($msg) && is_array($msg)) {
-      foreach ($msg as $key => $value) {
-         $output[] = "<div class=\"alert alert-{$key}\">";
-         $output[] = "<a href=\"#\" class=\"close\" data-dismiss=\"alert\">&times;</a>";
-         $output[] = remove_junk(first_character($value));
-         $output[] = "</div>";
+   if(!empty($_SESSION['msg'])) {
+      foreach ($_SESSION['msg'] as $type => $message) {
+         $output[] = '<div class="alert alert-'.ucfirst(!empty($type) ? $type : '').' alert-dismissible" role="alert">';
+         $output[] = '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>';
+         $output[] = '<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>';
+         $output[] = ucfirst(!empty($message) ? $message : '');
+         $output[] = '</div>';
       }
-      return implode('', $output);
+      return join('', $output);
    } else {
      return "";
    }

@@ -10,7 +10,7 @@
   }
 ?>
 <?php
-  $delete_id = delete_by_id('clientes',(int)$customer['Id_Cliente']);
+  $delete_id = delete_by_id('clientes',(int)$customer['ID']);
   if($delete_id){
       $session->msg("s","Cliente eliminado.");
       redirect('customers.php');

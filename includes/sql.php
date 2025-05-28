@@ -33,35 +33,31 @@ function find_by_id($table,$id)
   global $db;
   $id = (int)$id;
     if(tableExists($table)){
-          // Definir el nombre de la columna ID según la tabla
-          $id_column = 'id'; // valor por defecto
+          // Definir el nombre de la columna ID según la tabla en la nueva BD 'naycs'
+          $id_column = 'ID'; // Por defecto es 'ID' en el nuevo esquema
           switch($table) {
-            case 'clientes':
-              $id_column = 'Id_Cliente';
-              break;
-            case 'productos':
-              $id_column = 'Id_Productos';
-              break;
-            case 'venta':
-              $id_column = 'Folio';
-              break;
-            case 'servicio':
-              $id_column = 'Id_Servicio';
-              break;
-            case 'users':
+            // Mantener casos especiales si hay tablas con IDs que no sean 'ID' en naycs.sql
+            // case 'users':
+            //   $id_column = 'id'; // si users.id no cambió a users.ID
+            //   break;
+            // ... otros casos si aplican
+            case 'users': // user table still uses 'id'
               $id_column = 'id';
               break;
-            case 'user_groups':
+            case 'user_groups': // user_groups table still uses 'id'
               $id_column = 'id';
               break;
-            case 'media':
+            case 'media': // media table still uses 'id'
               $id_column = 'id';
               break;
-            case 'inventario':
-              $id_column = 'Id_Producto';
+            case 'producto': // Agregar caso para la tabla producto singular
+              $id_column = 'ID'; // Corregido a 'ID' según naycs.sql
               break;
-            // Añadir más casos si hay otras tablas con IDs diferentes
+            case 'usuario': // Agregar caso para la tabla usuario
+              $id_column = 'ID'; // Usar 'ID' según naycs.sql
+              break;
           }
+          // La tabla es la misma que se pasa, ya que find_all no singulariza
           $sql = $db->query("SELECT * FROM {$db->escape($table)} WHERE {$id_column}='{$db->escape($id)}' LIMIT 1");
           if($result = $db->fetch_assoc($sql))
             return $result;
@@ -77,25 +73,26 @@ function delete_by_id($table,$id)
   global $db;
   if(tableExists($table))
    {
-    // Definir el nombre de la columna ID según la tabla
-    $id_column = 'id'; // valor por defecto
+    // Definir el nombre de la columna ID según la tabla en la nueva BD 'naycs'
+    $id_column = 'ID'; // Por defecto es 'ID' en el nuevo esquema
     switch($table) {
-      case 'clientes':
-        $id_column = 'Id_Cliente';
+      // Mantener casos especiales si hay tablas con IDs que no sean 'ID' en naycs.sql
+      // case 'users':
+      //   $id_column = 'id';
+      //   break;
+      // ... otros casos si aplican
+      case 'users': // user table still uses 'id'
+        $id_column = 'id';
         break;
-      case 'productos':
+      case 'user_groups': // user_groups table still uses 'id'
+        $id_column = 'id';
+        break;
+      case 'media': // media table still uses 'id'
+        $id_column = 'id';
+        break;
+      case 'producto': // Agregar caso para la tabla producto singular
         $id_column = 'Id_Productos';
         break;
-      case 'venta':
-        $id_column = 'Folio';
-        break;
-      case 'servicio':
-        $id_column = 'Id_Servicio';
-        break;
-      case 'inventario':
-        $id_column = 'Id_Producto';
-        break;
-      // Añadir más casos si hay otras tablas con IDs diferentes
     }
 
     $sql = "DELETE FROM ".$db->escape($table);
@@ -112,28 +109,21 @@ function count_by_id($table){
   global $db;
   if(tableExists($table))
   {
-    // Definir el nombre de la columna ID según la tabla
-    $id_column = 'id'; // valor por defecto
+    // Definir el nombre de la columna ID según la tabla en la nueva BD 'naycs'
+    $id_column = 'ID'; // Por defecto es 'ID' en el nuevo esquema
     switch($table) {
-      case 'clientes':
-        $id_column = 'Id_Cliente';
-        break;
-      case 'productos':
-        $id_column = 'Id_Productos';
-        break;
-      case 'venta':
-        $id_column = 'Folio';
-        break;
-      case 'servicio':
-        $id_column = 'Id_Servicio';
-        break;
-      case 'users':
+      // Mantener casos especiales si hay tablas con IDs que no sean 'ID' en naycs.sql
+      // case 'users':
+      //   $id_column = 'id';
+      //   break;
+      // ... otros casos si aplican
+      case 'users': // user table still uses 'id'
         $id_column = 'id';
         break;
-      case 'user_groups':
+      case 'user_groups': // user_groups table still uses 'id'
         $id_column = 'id';
         break;
-      case 'media':
+      case 'media': // media table still uses 'id'
         $id_column = 'id';
         break;
     }
@@ -164,13 +154,13 @@ function tableExists($table){
     global $db;
     $username = $db->escape($username);
     $password = $db->escape($password);
-    $sql  = sprintf("SELECT id,username,password,user_level FROM users WHERE username ='%s' LIMIT 1", $username);
+    $sql  = sprintf("SELECT ID,Usuario,Password,Id_Rol FROM usuario WHERE Usuario ='%s' LIMIT 1", $username);
     $result = $db->query($sql);
     if($db->num_rows($result)){
       $user = $db->fetch_assoc($result);
       $password_request = sha1($password);
-      if($password_request === $user['password'] ){
-        return $user['id'];
+      if($password_request === $user['Password'] ){
+        return $user['ID'];
       }
     }
    return false;
@@ -180,49 +170,47 @@ function tableExists($table){
   /* provenientes del formulario login_v2.php.
   /* Si usas este método, elimina la función authenticate.
  /*--------------------------------------------------------------*/
-   function authenticate_v2($username='', $password='') {
+   function authenticate_v2($username, $password) {
      global $db;
      $username = $db->escape($username);
-     $password = $db->escape($password);
-     $sql  = sprintf("SELECT id,username,password,user_level FROM users WHERE username ='%s' LIMIT 1", $username);
+     $password = sha1($password);
+     
+     $sql = "SELECT id, username, user_level FROM users WHERE username = '{$username}' AND password = '{$password}' AND status = 1";
      $result = $db->query($sql);
-     if($db->num_rows($result)){
-       $user = $db->fetch_assoc($result);
-       $password_request = sha1($password);
-       if($password_request === $user['password'] ){
-         return $user;
-       }
+     
+     if($db->num_rows($result) == 1) {
+         return $db->fetch_assoc($result);
      }
-    return false;
+     return false;
    }
 
 
   /*--------------------------------------------------------------*/
   /* Encontrar usuario actual por ID de sesión
   /*--------------------------------------------------------------*/
-  function current_user(){
+  function current_user() {
       static $current_user;
       global $db;
-      if(!$current_user){
-         if(isset($_SESSION['user_id'])):
-             $user_id = intval($_SESSION['user_id']);
-             $current_user = find_by_id('users',$user_id);
-        endif;
+      if(!$current_user) {
+          if(isset($_SESSION['user_id'])) {
+              $user_id = intval($_SESSION['user_id']);
+              $current_user = find_by_id('users', $user_id);
+          }
       }
     return $current_user;
   }
   /*--------------------------------------------------------------*/
   /* Encontrar todos los usuarios
-  /* Uniendo tabla de usuarios y grupos de usuarios
+  /* Uniendo tabla de usuarios y roles
   /*--------------------------------------------------------------*/
   function find_all_user(){
       global $db;
       $results = array();
-      $sql = "SELECT u.id,u.name,u.username,u.user_level,u.status,u.last_login,";
-      $sql .="g.group_name ";
-      $sql .="FROM users u ";
-      $sql .="LEFT JOIN user_groups g ";
-      $sql .="ON g.group_level=u.user_level ORDER BY u.name ASC";
+      $sql = "SELECT u.ID,u.Nombre,u.Usuario,u.Id_Rol,u.Estado,u.Ultimo_Acceso,";
+      $sql .="r.Nombre as Nombre_Rol ";
+      $sql .="FROM usuario u ";
+      $sql .="LEFT JOIN rol r ";
+      $sql .="ON r.ID=u.Id_Rol ORDER BY u.Nombre ASC";
       $result = find_by_sql($sql);
       return $result;
   }
@@ -234,28 +222,18 @@ function tableExists($table){
 	{
 		global $db;
     $date = make_date();
-    $sql = "UPDATE users SET last_login='{$date}' WHERE id ='{$user_id}' LIMIT 1";
+    $sql = "UPDATE usuario SET Ultimo_Acceso='{$date}' WHERE ID ='{$user_id}' LIMIT 1";
     $result = $db->query($sql);
     return ($result && $db->affected_rows() === 1 ? true : false);
 	}
 
-  /*--------------------------------------------------------------*/
-  /* Encontrar nombre de grupo
-  /*--------------------------------------------------------------*/
-  function find_by_groupName($val)
-  {
-    global $db;
-    $sql = "SELECT group_name FROM user_groups WHERE group_name = '{$db->escape($val)}' LIMIT 1 ";
-    $result = $db->query($sql);
-    return($db->num_rows($result) === 0 ? true : false);
-  }
   /*--------------------------------------------------------------*/
   /* Encontrar nivel de grupo
   /*--------------------------------------------------------------*/
   function find_by_groupLevel($level)
   {
     global $db;
-    $sql = "SELECT group_level FROM user_groups WHERE group_level = '{$db->escape($level)}' LIMIT 1 ";
+    $sql = "SELECT ID FROM rol WHERE ID = '{$db->escape($level)}' LIMIT 1";
     $result = $db->query($sql);
     return($db->num_rows($result) === 0 ? true : false);
   }
@@ -265,24 +243,21 @@ function tableExists($table){
    function page_require_level($require_level){
      global $session;
      $current_user = current_user();
-     $login_level = find_by_groupLevel($current_user['user_level']);
+     
      //si el usuario no ha iniciado sesión
      if (!$session->isUserLoggedIn(true)):
             $session->msg('d','Por favor Iniciar sesión...');
             redirect('index.php', false);
-      //si el estado del grupo está desactivado
-     elseif($login_level['group_status'] === '0'):
-           $session->msg('d','Este nivel de usaurio esta inactivo!');
-           redirect('home.php',false);
-      //verificando nivel de usuario y nivel requerido
-     elseif($current_user['user_level'] <= (int)$require_level):
-              return true;
-      else:
+     endif;
+     
+     //verificando nivel de usuario y nivel requerido
+     if($current_user['user_level'] <= (int)$require_level):
+            return true;
+     else:
             $session->msg("d", "¡Lo siento!  no tienes permiso para ver la página.");
             redirect('home.php', false);
-        endif;
-
-     }
+     endif;
+   }
    /*--------------------------------------------------------------*/
    /* Función para encontrar todos los nombres de productos
    /* JOIN con tablas de categorías y medios

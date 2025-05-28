@@ -5,7 +5,7 @@
   page_require_level(2);
 ?>
 <?php
-$product = find_by_id('productos',(int)$_GET['id']);
+$product = find_by_id('producto',(int)$_GET['id']);
 $all_categories = find_all('categories');
 $all_providers = find_all('proveedores');
 
@@ -57,7 +57,7 @@ if(!$product){
        // echo "Debug: p_name = {$p_name}, p_desc = {$p_desc}, p_qty = {$p_qty}, p_cost = {$p_cost}, p_cat = {$p_cat}, p_photo = {$p_photo}, product_id = {$product['Id_Productos']}";
        // exit(); // Detener ejecución para ver los valores
 
-       $query   = "UPDATE productos SET";
+       $query   = "UPDATE producto SET";
        $query  .=" Nombre ='{$p_name}', Descripcion ='{$p_desc}',";
        $query  .=" Costo ='{$p_cost}', Precio_Publico ='{$p_public_price}', Precio_Instalador ='{$p_installer_price}', Margen_Utilidad ='{$p_margin_utility}', Ganancia ='{$p_gain}', Foto ='{$p_photo}', Categoria ='{$p_cat}', Id_Proveedor ='{$p_provider}'";
        $query  .=" WHERE Id_Productos ='{$product['Id_Productos']}'";

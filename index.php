@@ -167,14 +167,14 @@
                 <label for="username" class="control-label">Usuario</label>
                 <div class="input-group">
                     <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-                    <input type="text" class="form-control" name="username" placeholder="Ingrese su usuario" required>
+                    <input type="text" class="form-control" name="username" id="username" placeholder="Ingrese su usuario" required>
                 </div>
             </div>
             <div class="form-group">
-                <label for="Password" class="control-label">Contraseña</label>
+                <label for="password" class="control-label">Contraseña</label>
                 <div class="input-group">
                     <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
-                    <input type="password" name="password" class="form-control" placeholder="Ingrese su contraseña" required>
+                    <input type="password" name="password" id="password" class="form-control" placeholder="Ingrese su contraseña" required>
                 </div>
             </div>
             <div class="form-group">

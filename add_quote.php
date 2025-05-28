@@ -10,9 +10,9 @@ $sql = "SELECT Id_Cliente, Nombre, Apellido FROM clientes ORDER BY Nombre, Apell
 $clientes = find_by_sql($sql);
 
 // Obtener lista de productos (corregido el nombre de la tabla y columnas)
-$sql = "SELECT p.Id_Productos, p.Nombre, p.Costo, c.name as category_name 
-        FROM productos p 
-        LEFT JOIN categories c ON p.Categoria = c.id 
+$sql = "SELECT p.ID, p.Nombre, p.Precio, c.name as category_name 
+        FROM producto p 
+        LEFT JOIN categories c ON p.Id_Categoria = c.id 
         ORDER BY p.Nombre";
 $products = find_by_sql($sql);
 ?>
@@ -77,9 +77,9 @@ $products = find_by_sql($sql);
                         <select class="form-control" name="product_id[]" id="product_id">
                           <option value="">Seleccione producto</option>
                           <?php foreach($products as $product): ?>
-                            <option value="<?php echo (int)$product['Id_Productos']; ?>" 
-                                    data-price="<?php echo $product['Costo']; ?>">
-                              <?php echo remove_junk($product['Nombre']); ?> - $<?php echo number_format($product['Costo'], 2); ?>
+                            <option value="<?php echo (int)$product['ID']; ?>" 
+                                    data-price="<?php echo $product['Precio']; ?>">
+                              <?php echo remove_junk($product['Nombre']); ?> - $<?php echo number_format($product['Precio'], 2); ?>
                             </option>
                           <?php endforeach; ?>
                         </select>
@@ -201,9 +201,9 @@ $(document).ready(function() {
             <select class="form-control" name="product_id[]">
               <option value="">Seleccione producto</option>
               <?php foreach($products as $product): ?>
-                <option value="<?php echo (int)$product['Id_Productos']; ?>" 
-                        data-price="<?php echo $product['Costo']; ?>">
-                  <?php echo remove_junk($product['Nombre']); ?> - $<?php echo number_format($product['Costo'], 2); ?>
+                <option value="<?php echo (int)$product['ID']; ?>" 
+                        data-price="<?php echo $product['Precio']; ?>">
+                  <?php echo remove_junk($product['Nombre']); ?> - $<?php echo number_format($product['Precio'], 2); ?>
                 </option>
               <?php endforeach; ?>
             </select>

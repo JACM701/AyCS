@@ -12,13 +12,13 @@
 
   // Construir la consulta SQL base
   $sql = "SELECT p.*, i.Cantidad, c.name as category_name 
-          FROM productos p 
-          LEFT JOIN inventario i ON p.Id_Productos = i.Id_Producto 
-          LEFT JOIN categories c ON p.Categoria = c.id";
+          FROM producto p 
+          LEFT JOIN inventario i ON p.ID = i.Id_Producto 
+          LEFT JOIN categories c ON p.Id_Categoria = c.id";
 
   // Agregar filtro de categoría si se seleccionó una
   if($selected_category > 0) {
-    $sql .= " WHERE p.Categoria = {$selected_category}";
+    $sql .= " WHERE p.Id_Categoria = {$selected_category}";
   }
 
   $sql .= " ORDER BY p.Nombre";
@@ -102,13 +102,13 @@
                     }
                   ?>
                 </td>
-                <td class="text-center">$<?php echo number_format($product['Costo'], 2); ?></td>
+                <td class="text-center">$<?php echo number_format($product['Precio'], 2); ?></td>
                 <td class="text-center">
                   <div class="btn-group">
-                    <a href="edit_product.php?id=<?php echo (int)$product['Id_Productos'];?>" class="btn btn-info btn-xs" title="Editar" data-toggle="tooltip">
+                    <a href="edit_product.php?id=<?php echo (int)$product['ID'];?>" class="btn btn-info btn-xs" title="Editar" data-toggle="tooltip">
                       <span class="glyphicon glyphicon-edit"></span>
                     </a>
-                    <a href="delete_product.php?id=<?php echo (int)$product['Id_Productos'];?>" class="btn btn-danger btn-xs" title="Eliminar" data-toggle="tooltip" onclick="return confirm('¿Estás seguro de eliminar este producto?');">
+                    <a href="delete_product.php?id=<?php echo (int)$product['ID'];?>" class="btn btn-danger btn-xs" title="Eliminar" data-toggle="tooltip" onclick="return confirm('¿Estás seguro de eliminar este producto?');">
                       <span class="glyphicon glyphicon-trash"></span>
                     </a>
                   </div>

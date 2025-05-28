@@ -8,14 +8,19 @@ page_require_level(2);
 $year  = date('Y');
 $month = date('m');
 
-// Consulta SQL para obtener las ventas y los productos
+// Consulta SQL para obtener las ventas diarias de productos (usando detalle_venta)
 $query = "
-    SELECT v.Folio, v.Fecha, p.Nombre AS product_name, p.Costo AS product_cost, COUNT(v.Id_Productos) AS qty, 
-           (COUNT(v.Id_Productos) * p.Costo) AS total_saleing_price
+    SELECT v.Fecha,
+           p.Nombre AS product_name,
+           dv.Precio AS product_price, -- Usar precio de detalle_venta
+           SUM(dv.Cantidad) AS total_qty_sold, -- Sumar cantidad desde detalle_venta
+           SUM(dv.Cantidad * dv.Precio) AS total_saleing_price -- Calcular total usando precio y cantidad de detalle_venta
     FROM venta v
-    JOIN productos p ON v.Id_Productos = p.Id_Productos
+    JOIN detalle_venta dv ON v.ID = dv.Id_Venta -- Unir con detalle_venta usando v.ID (corregido de v.Folio)
+    JOIN producto p ON dv.Id_Producto = p.ID -- Unir con producto (singular) usando Id_Producto e ID
     WHERE YEAR(v.Fecha) = '{$year}' AND MONTH(v.Fecha) = '{$month}'
-    GROUP BY v.Folio, p.Id_Productos, v.Fecha
+      AND dv.Id_Producto IS NOT NULL -- Solo considerar items que son productos
+    GROUP BY v.Fecha, p.Nombre
     ORDER BY v.Fecha DESC
 ";
 
