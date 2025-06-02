@@ -197,10 +197,10 @@ function upload_image($file, $target_dir) {
  */
 function find_kit_items($kit_id) {
   global $db;
-  $sql = "SELECT ki.*, p.Nombre as producto_nombre 
-          FROM kit_items ki 
-          LEFT JOIN productos p ON ki.producto_id = p.Id_Productos 
-          WHERE ki.kit_id = '{$kit_id}'";
+  $sql = "SELECT kp.*, p.Nombre as producto_nombre 
+          FROM kit_producto kp 
+          LEFT JOIN producto p ON kp.Id_Producto = p.ID 
+          WHERE kp.Id_Kit = '{$kit_id}'";
   return find_by_sql($sql);
 }
 

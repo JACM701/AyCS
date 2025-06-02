@@ -34,6 +34,7 @@
     </a>
     <ul class="nav submenu">
       <li><a href="product.php">Productos</a></li>
+      <li><a href="providers.php">proveedores</a></li>
       <li><a href="add_product.php">Agregar producto</a></li>
       <li><a href="kits.php">Kits</a></li>
       <li><a href="add_kit.php">Agregar kit</a></li>
@@ -45,9 +46,10 @@
       <span>Transacciones</span>
     </a>
     <ul class="nav submenu">
+      <li><a href="quotes.php">Cotizaciones</a></li>
+      <li><a href="add_quote.php">Añadir Cotización</a></li>
       <li><a href="sales.php">Registro de ventas</a></li>
       <li><a href="add_sale.php">Nueva venta</a></li>
-      <li><a href="quotes.php">Cotizaciones</a></li>
     </ul>
   </li>
   <li>

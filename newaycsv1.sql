@@ -170,19 +170,22 @@ INSERT INTO `proveedores` (`Id_Proveedor`, `Nombre`, `Número`, `Correo`, `RFC`)
 --
 
 CREATE TABLE `quotes` (
-  `id` int(11) UNSIGNED NOT NULL,
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
   `client_id` int(11) DEFAULT NULL,
   `client_name` varchar(100) NOT NULL,
   `client_phone` varchar(20) DEFAULT NULL,
   `client_location` varchar(255) DEFAULT NULL,
   `quote_date` date NOT NULL,
-  `quote_type` varchar(100) DEFAULT NULL,
+  `quote_type` enum('mantenimiento','instalacion') NOT NULL,
   `subtotal` decimal(25,2) DEFAULT 0.00,
   `discount_percentage` decimal(5,2) DEFAULT 0.00,
   `total_amount` decimal(25,2) DEFAULT 0.00,
   `observations` text DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `client_id` (`client_id`),
+  CONSTRAINT `quotes_ibfk_1` FOREIGN KEY (`client_id`) REFERENCES `clientes` (`Id_Cliente`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -192,15 +195,18 @@ CREATE TABLE `quotes` (
 --
 
 CREATE TABLE `quote_items` (
-  `id` int(11) UNSIGNED NOT NULL,
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
   `quote_id` int(11) UNSIGNED NOT NULL,
-  `product_id` int(11) DEFAULT NULL,
-  `service_id` int(11) DEFAULT NULL,
+  `item_id` int(11) NOT NULL,
+  `item_type` enum('producto','servicio') NOT NULL,
   `description` varchar(255) NOT NULL,
   `quantity` int(11) NOT NULL DEFAULT 1,
   `unit_price` decimal(25,2) NOT NULL,
   `total_price` decimal(25,2) NOT NULL,
-  `image` varchar(255) DEFAULT NULL
+  `image` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `quote_id` (`quote_id`),
+  CONSTRAINT `quote_items_ibfk_1` FOREIGN KEY (`quote_id`) REFERENCES `quotes` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -369,16 +375,14 @@ ALTER TABLE `proveedores`
 --
 ALTER TABLE `quotes`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `quotes_ibfk_1` (`client_id`);
+  ADD KEY `client_id` (`client_id`);
 
 --
 -- Indices de la tabla `quote_items`
 --
 ALTER TABLE `quote_items`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `quote_items_ibfk_1` (`quote_id`),
-  ADD KEY `quote_items_ibfk_2` (`product_id`),
-  ADD KEY `quote_items_ibfk_3` (`service_id`);
+  ADD KEY `quote_id` (`quote_id`);
 
 --
 -- Indices de la tabla `servicio`
@@ -529,9 +533,7 @@ ALTER TABLE `quotes`
 -- Filtros para la tabla `quote_items`
 --
 ALTER TABLE `quote_items`
-  ADD CONSTRAINT `quote_items_ibfk_1` FOREIGN KEY (`quote_id`) REFERENCES `quotes` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `quote_items_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `productos` (`Id_Productos`) ON DELETE SET NULL,
-  ADD CONSTRAINT `quote_items_ibfk_3` FOREIGN KEY (`service_id`) REFERENCES `servicio` (`Id_Servicio`) ON DELETE SET NULL;
+  ADD CONSTRAINT `quote_items_ibfk_1` FOREIGN KEY (`quote_id`) REFERENCES `quotes` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

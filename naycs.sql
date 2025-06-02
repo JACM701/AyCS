@@ -119,10 +119,15 @@ CREATE TABLE `kit` (
 --
 
 CREATE TABLE `kit_producto` (
-  `ID` int(11) NOT NULL,
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Id_Kit` int(11) NOT NULL,
   `Id_Producto` int(11) NOT NULL,
-  `Cantidad` int(11) NOT NULL
+  `Cantidad` int(11) NOT NULL,
+  PRIMARY KEY (`ID`),
+  KEY `Id_Kit` (`Id_Kit`),
+  KEY `Id_Producto` (`Id_Producto`),
+  CONSTRAINT `kit_producto_ibfk_1` FOREIGN KEY (`Id_Kit`) REFERENCES `kit` (`ID`) ON DELETE CASCADE,
+  CONSTRAINT `kit_producto_ibfk_2` FOREIGN KEY (`Id_Producto`) REFERENCES `producto` (`ID`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------

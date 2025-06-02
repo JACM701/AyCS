@@ -182,12 +182,19 @@ function tableExists($table){
    function authenticate_v2($username, $password) {
      global $db;
      $username = $db->escape($username);
-     // Si la contraseña en la BD NO está hasheada, usar la contraseña sin hashear
      $password = $db->escape($password);
-     $sql = "SELECT ID, Usuario, Id_Rol FROM usuario WHERE Usuario = '{$username}' AND Contrasena = '{$password}' LIMIT 1";
+     
+     // Buscar usuario en la tabla usuario
+     $sql = "SELECT ID, Usuario, Id_Rol, Nombre 
+             FROM usuario 
+             WHERE Usuario = '{$username}' 
+             AND Contrasena = '{$password}' 
+             LIMIT 1";
      $result = $db->query($sql);
+     
      if($db->num_rows($result) == 1) {
-         return $db->fetch_assoc($result);
+       $user = $db->fetch_assoc($result);
+       return $user;
      }
      return false;
    }
@@ -197,15 +204,21 @@ function tableExists($table){
   /* Encontrar usuario actual por ID de sesión
   /*--------------------------------------------------------------*/
   function current_user() {
-      static $current_user;
-      global $db;
-      if(!$current_user) {
-          if(isset($_SESSION['user_id'])) {
-              $user_id = intval($_SESSION['user_id']);
-              // Buscar usuario en la tabla 'usuario' usando la columna 'ID'
-              $current_user = find_by_id('usuario', $user_id);
-          }
+    static $current_user;
+    global $db;
+    if(!$current_user) {
+      if(isset($_SESSION['user_id'])) {
+        $user_id = intval($_SESSION['user_id']);
+        $sql = "SELECT u.*, r.Nombre as Nombre_Rol 
+                FROM usuario u 
+                LEFT JOIN rol r ON r.ID = u.Id_Rol 
+                WHERE u.ID = '{$user_id}' LIMIT 1";
+        $result = $db->query($sql);
+        if($db->num_rows($result) == 1) {
+          $current_user = $db->fetch_assoc($result);
+        }
       }
+    }
     return $current_user;
   }
   /*--------------------------------------------------------------*/
@@ -246,6 +259,18 @@ function tableExists($table){
     $result = $db->query($sql);
     return($db->num_rows($result) === 0 ? true : false);
   }
+
+  /*--------------------------------------------------------------*/
+  /* Función para encontrar grupo por nombre
+  /*--------------------------------------------------------------*/
+  function find_by_groupName($group_name)
+  {
+    global $db;
+    $sql = "SELECT ID FROM user_groups WHERE group_name = '{$db->escape($group_name)}' LIMIT 1";
+    $result = $db->query($sql);
+    return($db->num_rows($result) === 0 ? false : true);
+  }
+
   /*--------------------------------------------------------------*/
   /* Función para verificar qué nivel de usuario tiene acceso a la página
   /*--------------------------------------------------------------*/
@@ -253,18 +278,40 @@ function tableExists($table){
      global $session;
      $current_user = current_user();
      
-     //si el usuario no ha iniciado sesión
+     // Si el usuario no ha iniciado sesión
      if (!$session->isUserLoggedIn(true)):
-            $session->msg('d','Por favor Iniciar sesión...');
-            redirect('index.php', false);
+       $session->msg('d','Por favor Iniciar sesión...');
+       redirect('index.php', false);
      endif;
      
-     //verificando nivel de usuario y nivel requerido
-     if(isset($current_user['Id_Rol']) && $current_user['Id_Rol'] <= (int)$require_level):
-            return true;
+     // Verificar que el usuario tenga un rol válido
+     if(!isset($current_user['Id_Rol']) || !is_numeric($current_user['Id_Rol'])):
+       $session->msg("d", "Error: Rol de usuario no válido.");
+       $session->logout();
+       redirect('index.php', false);
+     endif;
+     
+     // Verificar nivel de usuario y nivel requerido
+     if($current_user['Id_Rol'] <= (int)$require_level):
+       return true;
      else:
-            $session->msg("d", "¡Lo siento!  no tienes permiso para ver la página.");
-            redirect('home.php', false);
+       $session->msg("d", "¡Lo siento! No tienes permiso para ver la página.");
+       // Redirigir según el rol del usuario
+       switch($current_user['Id_Rol']) {
+         case '1': // Administrador
+           redirect('admin.php', false);
+           break;
+         case '2': // Usuario Especial
+           redirect('special_dashboard.php', false);
+           break;
+         case '3': // Usuario Normal
+           redirect('home.php', false);
+           break;
+         default:
+           $session->msg("d", "Error: Rol de usuario no reconocido.");
+           $session->logout();
+           redirect('index.php', false);
+       }
      endif;
    }
    /*--------------------------------------------------------------*/

@@ -6,9 +6,9 @@
 ?>
 <?php
   //Display all catgories.
-  $categorie = find_by_id('categories',(int)$_GET['id']);
+  $categorie = find_by_id('categoria_producto',(int)$_GET['id']);
   if(!$categorie){
-    $session->msg("d","Missing categorie id.");
+    $session->msg("d","ID de categoría no encontrado.");
     redirect('categorie.php');
   }
 ?>
@@ -19,8 +19,8 @@ if(isset($_POST['edit_cat'])){
   validate_fields($req_field);
   $cat_name = remove_junk($db->escape($_POST['categorie-name']));
   if(empty($errors)){
-        $sql = "UPDATE categories SET name='{$cat_name}'";
-       $sql .= " WHERE id='{$categorie['id']}'";
+        $sql = "UPDATE categoria_producto SET Nombre='{$cat_name}'";
+       $sql .= " WHERE ID='{$categorie['ID']}'";
      $result = $db->query($sql);
      if($result && $db->affected_rows() === 1) {
        $session->msg("s", "Categoría actualizada con éxito.");
@@ -46,13 +46,13 @@ if(isset($_POST['edit_cat'])){
        <div class="panel-heading">
          <strong>
            <span class="glyphicon glyphicon-th"></span>
-           <span>Editando <?php echo remove_junk(ucfirst($categorie['name']));?></span>
+           <span>Editando <?php echo remove_junk(ucfirst($categorie['Nombre']));?></span>
         </strong>
        </div>
        <div class="panel-body">
-         <form method="post" action="edit_categorie.php?id=<?php echo (int)$categorie['id'];?>">
+         <form method="post" action="edit_categorie.php?id=<?php echo (int)$categorie['ID'];?>">
            <div class="form-group">
-               <input type="text" class="form-control" name="categorie-name" value="<?php echo remove_junk(ucfirst($categorie['name']));?>">
+               <input type="text" class="form-control" name="categorie-name" value="<?php echo remove_junk(ucfirst($categorie['Nombre']));?>">
            </div>
            <button type="submit" name="edit_cat" class="btn btn-primary">Actualizar categoría</button>
        </form>
@@ -60,7 +60,5 @@ if(isset($_POST['edit_cat'])){
      </div>
    </div>
 </div>
-
-
 
 <?php include_once('layouts/footer.php'); ?>

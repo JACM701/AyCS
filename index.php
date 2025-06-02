@@ -2,14 +2,15 @@
   ob_start();
   require_once('includes/load.php');
 
-  // >>> Inicio de la lógica de autenticación movida desde auth.php
+  // Si el usuario ya está logueado, redirigir a home.php
+  if($session->isUserLoggedIn(true)) { 
+    redirect('home.php', false);
+  }
+
+  // Procesar el formulario de login
   if(isset($_POST['login'])){
       $username = remove_junk($db->escape($_POST['username']));
       $password = remove_junk($db->escape($_POST['password']));
-
-      // Debug: Mostrar los valores recibidos (mensaje visible)
-      $session->msg("i", "Intento de login - Usuario: " . $username);
-      error_log("Intento de login - Usuario: " . $username); // Mantener log por si acaso
 
       if(empty($username) || empty($password)){
           $session->msg("d", "Por favor ingrese usuario y contraseña");
@@ -20,35 +21,30 @@
       $user = authenticate_v2($username, $password);
       
       if($user){
-          // Debug: Mostrar información del usuario autenticado (mensaje visible)
-          $session->msg("s", "Usuario autenticado correctamente. ID: " . $user['ID'] . ", Rol: " . $user['Id_Rol']);
-          error_log("Usuario autenticado - ID: " . $user['ID'] . ", Rol: " . $user['Id_Rol']); // Mantener log
-          
           $session->login($user['ID']);
-          // updateLastLogIn($user['ID']); // Deshabilitado ya que la columna Ultimo_Acceso no existe
           
           // Redirigir según el nivel de usuario
-          if($user['Id_Rol'] === '1'){
-              $session->msg("s", "Bienvenido al Panel de Administración");
-              redirect('admin.php', false);
-          } elseif($user['Id_Rol'] === '2'){
-              $session->msg("s", "Bienvenido al Panel de Usuario Especial");
-              redirect('special_dashboard.php', false);
-          } else {
-              $session->msg("s", "Bienvenido al Panel de Usuario");
-              redirect('home.php', false);
+          switch($user['Id_Rol']) {
+              case '1': // Administrador
+                  $session->msg("s", "Bienvenido al Panel de Administración");
+                  redirect('admin.php', false);
+                  break;
+              case '2': // Usuario Especial
+                  $session->msg("s", "Bienvenido al Panel de Usuario Especial");
+                  redirect('special_dashboard.php', false);
+                  break;
+              case '3': // Usuario Normal
+                  $session->msg("s", "Bienvenido al Panel de Usuario");
+                  redirect('home.php', false);
+                  break;
+              default:
+                  $session->msg("d", "Rol de usuario no válido");
+                  redirect('index.php', false);
           }
       } else {
-        // Debug: Mostrar error de autenticación (mensaje visible)
           $session->msg("d", "Usuario o contraseña incorrectos");
-          error_log("Error de autenticación para usuario: " . $username); // Mantener log
           redirect('index.php', false);
       }
-  }
-  // <<< Fin de la lógica de autenticación
-
-  if($session->isUserLoggedIn(true)) { 
-    redirect('home.php', false);
   }
 ?>
 <!DOCTYPE html>

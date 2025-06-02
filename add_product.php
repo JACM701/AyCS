@@ -118,7 +118,7 @@
                  <label for="product-price">Precio</label>
                 <div class="input-group">
                   <span class="input-group-addon"><i class="glyphicon glyphicon-usd"></i></span>
-                  <input type="number" class="form-control" name="product-price" id="product-price" placeholder="Precio" step="0.01" require>
+                  <input type="number" class="form-control" name="product-price" id="product-price" placeholder="Precio" step="0.01" required>
                   <span class="input-group-addon">.00</span>
                 </div>
               </div>
@@ -205,81 +205,5 @@
     </div>
   </div>
 </div>
-
-<style>
-.custom-file-upload {
-    display: inline-block;
-    position: relative;
-}
-
-.custom-file-upload label {
-    margin-bottom: 0;
-    cursor: pointer;
-}
-
-#image-preview {
-    transition: all 0.3s ease;
-}
-
-#image-preview:hover {
-    border-color: #2196F3;
-}
-
-#file-name {
-    color: #666;
-    font-style: italic;
-}
-</style>
-
-<script>
-document.getElementById('product-photo').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        // Actualizar nombre del archivo
-        document.getElementById('file-name').textContent = file.name;
-        
-        // Vista previa de la imagen
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const preview = document.getElementById('image-preview');
-            preview.style.backgroundImage = 'url(' + e.target.result + ')';
-        }
-        reader.readAsDataURL(file);
-    } else {
-        document.getElementById('file-name').textContent = 'Ninguna imagen seleccionada';
-        document.getElementById('image-preview').style.backgroundImage = 'none';
-    }
-});
-
-// Script para calcular precios basados en porcentaje
-$('#product-cost, #product-public-percent, #product-installer-percent').on('input', function() {
-  var cost = parseFloat($('#product-cost').val()) || 0;
-  var publicPercent = parseFloat($('#product-public-percent').val()) || 0;
-  var installerPercent = parseFloat($('#product-installer-percent').val()) || 0;
-  
-  // Calcular Precio Público si se introduce porcentaje y costo
-  if (cost > 0 && publicPercent >= 0) {
-    var publicPrice = cost * (1 + (publicPercent / 100));
-    $('#product-public-price').val(publicPrice.toFixed(2));
-  } else if (cost > 0 && publicPercent < 0) {
-       $('#product-public-price').val('');
-  }
-   else {
-    $('#product-public-price').val('');
-  }
-
-  // Calcular Precio Instalador si se introduce porcentaje y costo
-   if (cost > 0 && installerPercent >= 0) {
-    var installerPrice = cost * (1 + (installerPercent / 100));
-    $('#product-installer-price').val(installerPrice.toFixed(2));
-  } else if (cost > 0 && installerPercent < 0) {
-       $('#product-installer-price').val('');
-  }
-   else {
-    $('#product-installer-price').val('');
-  }
-
-});
-</script>
 
 <?php include_once('layouts/footer.php'); ?>

@@ -10,11 +10,11 @@
    $req_fields = array('group-name','group-level');
    validate_fields($req_fields);
 
-   if(find_by_groupName($_POST['group-name']) === false ){
-     $session->msg('d','<b>Error!</b> El nombre de grupo realmente existe en la base de datos');
+   if(find_by_groupName($_POST['group-name'])){
+     $session->msg('d','<b>Error!</b> El nombre del grupo ya existe en la base de datos');
      redirect('add_group.php', false);
    }elseif(find_by_groupLevel($_POST['group-level']) === false) {
-     $session->msg('d','<b>Error!</b> El nombre de grupo realmente existe en la base de datos ');
+     $session->msg('d','<b>Error!</b> El nivel de grupo no es válido');
      redirect('add_group.php', false);
    }
    if(empty($errors)){
@@ -33,7 +33,7 @@
           redirect('add_group.php', false);
         } else {
           //failed
-          $session->msg('d','Lamentablemente no se pudo crear el grupo!');
+          $session->msg('d',' Lo siento, el registro falló!');
           redirect('add_group.php', false);
         }
    } else {

@@ -5,17 +5,162 @@ require_once('includes/load.php');
 // Verificar nivel de usuario
 page_require_level(1);
 
+// Registrar cliente
+if(isset($_POST['add_cliente'])) {
+    $req_fields = array('nombre', 'correo', 'direccion');
+    validate_fields($req_fields);
+
+    if(empty($errors)) {
+        $nombre = $db->escape($_POST['nombre']);
+        $correo = $db->escape($_POST['correo']);
+        $numero = $db->escape($_POST['numero']);
+        $direccion = $db->escape($_POST['direccion']);
+
+        $sql = "INSERT INTO cliente (Nombre, Correo, Numero_Telefono, Direccion) 
+                VALUES ('{$nombre}', '{$correo}', '{$numero}', '{$direccion}')";
+
+        if($db->query($sql)) {
+            $session->msg('s', "Cliente registrado exitosamente");
+            redirect('add_quote.php', false);
+        } else {
+            $session->msg('d', "Error al registrar cliente");
+            redirect('add_quote.php', false);
+        }
+    } else {
+        $session->msg("d", $errors);
+        redirect('add_quote.php', false);
+    }
+}
+
+// Registrar producto
+if(isset($_POST['add_product'])) {
+    $req_fields = array('product-title', 'product-description', 'product-quantity', 'product-price', 'product-category');
+    validate_fields($req_fields);
+
+    if(empty($errors)) {
+        $p_name = remove_junk($db->escape($_POST['product-title']));
+        $p_desc = remove_junk($db->escape($_POST['product-description']));
+        $p_qty = remove_junk($db->escape($_POST['product-quantity']));
+        $p_price = remove_junk($db->escape($_POST['product-price']));
+        $p_category = remove_junk($db->escape($_POST['product-category']));
+
+        $query = "INSERT INTO producto (Nombre, Descripcion, Precio, Id_Categoria) 
+                 VALUES ('{$p_name}', '{$p_desc}', '{$p_price}', '{$p_category}')";
+
+        if($db->query($query)) {
+            $product_id = $db->insert_id();
+            $query2 = "INSERT INTO inventario (Id_Producto, Cantidad) VALUES ('{$product_id}', '{$p_qty}')";
+
+            if($db->query($query2)) {
+                $session->msg('s', "Producto agregado exitosamente");
+                redirect('add_quote.php', false);
+            } else {
+                $session->msg('d', 'Error al agregar al inventario');
+                redirect('add_quote.php', false);
+            }
+        } else {
+            $session->msg('d', 'Error al agregar el producto');
+            redirect('add_quote.php', false);
+        }
+    } else {
+        $session->msg("d", $errors);
+        redirect('add_quote.php', false);
+    }
+}
+
 // Obtener lista de clientes
-$sql = "SELECT ID, Nombre FROM cliente ORDER BY Nombre";
+$sql = "SELECT ID, Nombre, Numero_Telefono, Direccion, Correo FROM cliente ORDER BY Nombre";
 $clientes = find_by_sql($sql);
 
-// Obtener lista de productos (corregido el nombre de la tabla y columnas)
-$sql = "SELECT p.ID, p.Nombre, p.Precio FROM producto p ORDER BY p.Nombre";
-$products = find_by_sql($sql);
+// Obtener lista de productos con información de inventario
+$sql = "SELECT p.ID, p.Nombre, p.Precio, i.Cantidad 
+        FROM producto p 
+        LEFT JOIN inventario i ON p.ID = i.Id_Producto 
+        ORDER BY p.Nombre";
+$productos = find_by_sql($sql);
 
-// Obtener lista de servicios (tabla servicio, columnas ID, Nombre, Costo)
-$sql_servicios = "SELECT s.ID, s.Nombre, s.Costo FROM servicio s ORDER BY s.Nombre";
-$services = find_by_sql($sql_servicios);
+// Obtener lista de servicios
+$sql_servicios = "SELECT ID, Nombre, Costo FROM servicio ORDER BY Nombre";
+$servicios = find_by_sql($sql_servicios);
+
+// Obtener categorías para el formulario de productos
+$categorias = find_all('categoria_producto');
+
+// Obtener lista de kits
+$sql_kits = "SELECT k.ID, k.Nombre, k.Descripcion, k.Precio 
+             FROM kit k 
+             ORDER BY k.Nombre";
+$kits = find_by_sql($sql_kits);
+
+// Obtener productos de un kit específico
+if(isset($_GET['kit_id'])) {
+    $kit_id = (int)$_GET['kit_id'];
+    $sql_kit_products = "SELECT p.ID, p.Nombre, p.Precio, kp.Cantidad 
+                        FROM kit_producto kp 
+                        JOIN producto p ON kp.Id_Producto = p.ID 
+                        WHERE kp.Id_Kit = '{$kit_id}'";
+    $kit_products = find_by_sql($sql_kit_products);
+}
+
+// Procesar el formulario cuando se envía
+if(isset($_POST['add_quote'])) {
+    $req_fields = array('cliente_id', 'fecha');
+    validate_fields($req_fields);
+
+    if(empty($errors)) {
+        $cliente_id = (int)$_POST['cliente_id'];
+        $fecha = $db->escape($_POST['fecha']);
+        $telefono = $db->escape($_POST['cliente_telefono']);
+        $correo = $db->escape($_POST['cliente_correo']);
+        $direccion = $db->escape($_POST['cliente_direccion']);
+
+        // Iniciar transacción
+        $db->query('START TRANSACTION');
+
+        try {
+            // Insertar la cotización
+            $sql = "INSERT INTO cotizacion (Id_Cliente, Fecha) 
+                    VALUES ('{$cliente_id}', '{$fecha}')";
+            
+            if($db->query($sql)) {
+                $cotizacion_id = $db->insert_id();
+                
+                // Procesar los items
+                if(isset($_POST['items']) && is_array($_POST['items'])) {
+                    foreach($_POST['items'] as $item) {
+                        if(isset($item['producto_id']) && isset($item['cantidad']) && isset($item['precio'])) {
+                            $producto_id = (int)$item['producto_id'];
+                            $cantidad = (int)$item['cantidad'];
+                            $precio = (float)$item['precio'];
+                            
+                            $sql = "INSERT INTO detalle_cotizacion (Id_Cotizacion, Id_Producto, Precio) 
+                                    VALUES ('{$cotizacion_id}', '{$producto_id}', '{$precio}')";
+                            
+                            if(!$db->query($sql)) {
+                                throw new Exception("Error al insertar detalle de cotización");
+                            }
+                        }
+                    }
+                }
+                
+                // Confirmar transacción
+                $db->query('COMMIT');
+                $session->msg('s', "Cotización agregada exitosamente.");
+                redirect('quotes.php', false);
+            } else {
+                throw new Exception("Error al crear la cotización");
+            }
+        } catch (Exception $e) {
+            // Revertir transacción en caso de error
+            $db->query('ROLLBACK');
+            $session->msg('d', "Error al agregar la cotización: " . $e->getMessage());
+            redirect('add_quote.php', false);
+        }
+    } else {
+        $session->msg("d", $errors);
+        redirect('add_quote.php', false);
+    }
+}
 ?>
 
 <?php include_once('layouts/header.php'); ?>
@@ -34,53 +179,158 @@ $services = find_by_sql($sql_servicios);
           <span class="glyphicon glyphicon-th"></span>
           <span>Nueva Cotización</span>
         </strong>
+        <div class="pull-right">
+          <a href="quotes.php" class="btn btn-default">Volver</a>
+        </div>
       </div>
       <div class="panel-body">
         <form method="post" action="add_quote.php" class="clearfix">
-          <div class="row">
-            <div class="col-md-6">
-              <div class="form-group">
-                <label for="client_id">Cliente</label>
-                <select class="form-control" name="client_id" id="client_id" required>
-                  <option value="">Seleccione un cliente</option>
-                  <?php foreach($clientes as $cliente): ?>
-                    <option value="<?php echo (int)$cliente['ID']; ?>">
-                      <?php echo remove_junk($cliente['Nombre']); ?>
-                    </option>
-                  <?php endforeach; ?>
-                </select>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="form-group">
-                <label for="quote_date">Fecha de Cotización</label>
-                <input type="date" class="form-control" name="quote_date" id="quote_date" value="<?php echo date('Y-m-d'); ?>" required>
-              </div>
-            </div>
-          </div>
-
+          <!-- Información del Cliente -->
           <div class="row">
             <div class="col-md-12">
-              <div class="panel panel-default">
+              <div class="panel panel-info">
                 <div class="panel-heading">
-                  <strong>Items de Cotización</strong>
+                  <h3 class="panel-title">Información del Cliente</h3>
                 </div>
                 <div class="panel-body">
-                  <div id="items_list">
-                    <!-- Los items se agregarán aquí dinámicamente -->
+                  <div class="row">
+                    <div class="col-md-4">
+                      <div class="form-group">
+                        <label for="cliente_id">Cliente</label>
+                        <div class="input-group">
+                          <select class="form-control" name="cliente_id" id="cliente_id" required>
+                            <option value="">Seleccione un cliente</option>
+                            <?php foreach($clientes as $cliente): ?>
+                              <option value="<?php echo (int)$cliente['ID']; ?>" 
+                                      data-telefono="<?php echo htmlspecialchars($cliente['Numero_Telefono'] ?? ''); ?>"
+                                      data-direccion="<?php echo htmlspecialchars($cliente['Direccion'] ?? ''); ?>"
+                                      data-correo="<?php echo htmlspecialchars($cliente['Correo'] ?? ''); ?>">
+                                <?php echo remove_junk($cliente['Nombre']); ?>
+                              </option>
+                            <?php endforeach; ?>
+                          </select>
+                          <span class="input-group-btn">
+                            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#addCustomerModal">
+                              <i class="glyphicon glyphicon-plus"></i>
+                            </button>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-8">
+                      <div class="row">
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label>Teléfono</label>
+                            <input type="text" class="form-control" id="cliente_telefono" name="cliente_telefono">
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label>Correo</label>
+                            <input type="email" class="form-control" id="cliente_correo" name="cliente_correo">
+                          </div>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label>Dirección</label>
+                        <input type="text" class="form-control" id="cliente_direccion" name="cliente_direccion">
+                      </div>
+                    </div>
                   </div>
-                  
-                  <button type="button" class="btn btn-success pull-right" id="add_item_btn">Agregar Item</button>
+                  <div class="form-group">
+                    <label for="fecha">Fecha</label>
+                    <input type="date" class="form-control" name="fecha" id="fecha" value="<?php echo date('Y-m-d'); ?>" required>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
+          <!-- Items de la Cotización -->
           <div class="row">
             <div class="col-md-12">
-              <div class="form-group">
-                <label for="observations">Observaciones</label>
-                <textarea class="form-control" name="observations" rows="3"></textarea>
+              <div class="panel panel-info">
+                <div class="panel-heading clearfix">
+                  <h3 class="panel-title">Items de la Cotización</h3>
+                </div>
+                <div class="panel-body">
+                  <!-- Selección de Kit -->
+                  <div class="row" style="margin-bottom: 20px;">
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="kit_id">Kit (opcional)</label>
+                        <select class="form-control" id="kit_id" name="kit_id">
+                          <option value="">Seleccione un kit</option>
+                          <?php foreach($kits as $kit): ?>
+                            <option value="<?php echo (int)$kit['ID']; ?>">
+                              <?php echo remove_junk($kit['Nombre']); ?> - $<?php echo number_format($kit['Precio'], 2); ?>
+                            </option>
+                          <?php endforeach; ?>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Formulario para agregar items -->
+                  <div class="row" style="margin-bottom: 20px;">
+                    <div class="col-md-4">
+                      <div class="form-group">
+                        <label for="product_id">Producto</label>
+                        <select class="form-control" id="product_id" name="product_id">
+                          <option value="">Seleccione un producto</option>
+                          <?php foreach($productos as $producto): ?>
+                            <option value="<?php echo (int)$producto['ID']; ?>" 
+                                    data-row='<?php echo json_encode([
+                                      "nombre" => $producto['Nombre'],
+                                      "precio" => $producto['Precio'],
+                                      "stock" => $producto['Cantidad']
+                                    ]); ?>'>
+                              <?php echo remove_junk($producto['Nombre']); ?> - $<?php echo number_format($producto['Precio'], 2); ?> (Stock: <?php echo $producto['Cantidad']; ?>)
+                            </option>
+                          <?php endforeach; ?>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="col-md-2">
+                      <div class="form-group">
+                        <label for="cantidad">Cantidad</label>
+                        <input type="number" class="form-control" id="cantidad" name="cantidad" min="1" value="1">
+                      </div>
+                    </div>
+                    <div class="col-md-2">
+                      <div class="form-group">
+                        <label>&nbsp;</label>
+                        <button type="button" class="btn btn-primary btn-block" id="add-item">
+                          <i class="glyphicon glyphicon-plus"></i> Agregar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Tabla de items -->
+                  <div class="table-responsive">
+                    <table class="table table-bordered" id="items-table">
+                      <thead>
+                        <tr>
+                          <th>Producto</th>
+                          <th>Cantidad</th>
+                          <th>Precio Unitario</th>
+                          <th>Subtotal</th>
+                          <th>Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      </tbody>
+                      <tfoot>
+                        <tr>
+                          <td colspan="3" class="text-right"><strong>Total:</strong></td>
+                          <td colspan="2"><span id="total">$0.00</span></td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -94,235 +344,319 @@ $services = find_by_sql($sql_servicios);
   </div>
 </div>
 
+<style>
+.panel {
+    border: none;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+    margin-bottom: 20px;
+}
+
+.panel:hover {
+    box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+}
+
+.panel-info {
+    border-color: #bce8f1;
+}
+
+.panel-info > .panel-heading {
+    background-color: #d9edf7;
+    border-color: #bce8f1;
+    color: #31708f;
+    padding: 15px;
+}
+
+.panel-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.input-group-addon {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    color: #283593;
+}
+
+.form-control {
+    border: 1px solid #e9ecef;
+    padding: 10px;
+    height: auto;
+}
+
+.form-control:focus {
+    border-color: #283593;
+    box-shadow: 0 0 0 0.2rem rgba(40, 53, 147, 0.25);
+}
+
+.btn {
+    padding: 10px 20px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #283593 0%, #1a237e 100%);
+    border: none;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    border: none;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.btn i {
+    margin-right: 8px;
+}
+
+.item-row {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.item-row:last-child {
+    border-bottom: none;
+}
+
+#add_item {
+    margin-top: -5px;
+}
+
+@media (max-width: 768px) {
+    .col-md-6, .col-md-4, .col-md-2, .col-md-1 {
+        margin-bottom: 15px;
+    }
+    
+    .btn {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}
+</style>
+
+<!-- Agregar jQuery antes de nuestro script -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 <script>
 $(document).ready(function() {
-  // Cargar productos y servicios para usar en los items dinámicos
-  const products = <?php echo json_encode($products); ?>;
-  const services = <?php echo json_encode($services); ?>;
-
-  // Función para agregar un nuevo item al formulario
-  $('#add_item_btn').click(function() {
-    var itemHtml = `
-      <div class="row item-row" style="margin-bottom: 15px; padding: 10px; border: 1px solid #eee; border-radius: 5px;">
-        <div class="col-md-4">
-          <div class="form-group">
-            <label>Tipo</label>
-            <select class="form-control item-type" name="item_type[]">
-              <option value="product">Producto</option>
-              <option value="service">Servicio</option>
-            </select>
-          </div>
-        </div>
-        <div class="col-md-4 item-select-container">
-           <div class="form-group">
-             <label>Seleccionar Producto</label>
-             <select class="form-control item-select" name="product_id[]" required>
-               <option value="">Seleccione producto</option>
-               ${products.map(p => `<option value="${p.ID}" data-price="${p.Precio}">${p.Nombre} - $${parseFloat(p.Precio).toFixed(2)}</option>`).join('')}
-             </select>
-           </div>
-        </div>
-         <div class="col-md-2">
-           <div class="form-group">
-             <label>Cantidad</label>
-             <input type="number" class="form-control item-quantity" name="quantity[]" min="1" value="1" required>
-           </div>
-         </div>
-        <div class="col-md-2">
-          <div class="form-group">
-            <label>Precio Unitario</label>
-            <input type="number" class="form-control item-unit-price" name="unit_price[]" step="0.01" min="0" required>
-          </div>
-        </div>
-        <div class="col-md-2">
-          <div class="form-group">
-            <label>Descuento (%)</label>
-            <input type="number" class="form-control item-discount" name="discount[]" step="0.01" min="0" max="100" value="0">
-          </div>
-        </div>
-         <div class="col-md-2">
-           <div class="form-group">
-             <label>Precio Total Item</label>
-             <input type="text" class="form-control item-total-price" readonly>
-           </div>
-         </div>
-        <div class="col-md-2">
-          <div class="form-group">
-            <label>&nbsp;</label>
-            <button type="button" class="btn btn-danger btn-block remove-item">Eliminar</button>
-          </div>
-        </div>
-      </div>
-    `;
-    $('#items_list').append(itemHtml);
-  });
-
-  // Cambiar selector de producto a servicio y viceversa
-  $(document).on('change', '.item-type', function() {
-    var itemType = $(this).val();
-    var itemRow = $(this).closest('.item-row');
-    var selectContainer = itemRow.find('.item-select-container');
-    selectContainer.empty(); // Limpiar el contenido actual
-
-    if (itemType === 'product') {
-      var productSelectHtml = `
-         <div class="form-group">
-           <label>Seleccionar Producto</label>
-           <select class="form-control item-select" name="product_id[]" required>
-             <option value="">Seleccione producto</option>
-             ${products.map(p => `<option value="${p.ID}" data-price="${p.Precio}">${p.Nombre} - $${parseFloat(p.Precio).toFixed(2)}</option>`).join('')}
-           </select>
-         </div>
-      `;
-      selectContainer.append(productSelectHtml);
-       // Restaurar campos relacionados si existen
-       itemRow.find('input[name="quantity[]"]').val(1).prop('required', true).show();
-       itemRow.find('input[name="unit_price[]"]').val('').prop('required', true).show();
-
-    } else if (itemType === 'service') {
-      var serviceSelectHtml = `
-         <div class="form-group">
-           <label>Seleccionar Servicio</label>
-           <select class="form-control item-select" name="service_id[]" required>
-             <option value="">Seleccione servicio</option>
-             ${services.map(s => `<option value="${s.ID}" data-price="${s.Costo}">${s.Nombre} - $${parseFloat(s.Costo).toFixed(2)}</option>`).join('')}
-           </select>
-         </div>
-      `;
-      selectContainer.append(serviceSelectHtml);
-      // Para servicios, la cantidad suele ser 1 y el precio unitario es el costo del servicio
-      // Ocultar cantidad y usar el costo del servicio como precio unitario
-      itemRow.find('input[name="quantity[]"]').val(1).prop('required', false).hide();
-      itemRow.find('input[name="unit_price[]"]').val('').prop('required', false).hide(); // El precio se obtiene del select
+    let rowCounter = 0; // Contador para filas únicas
+    
+    // Función para agregar una fila de producto
+    function addProductRow(productData, cantidad) {
+        rowCounter++;
+        var subtotal = productData.precio * cantidad;
+        var newRow = `
+            <tr data-row-id="${rowCounter}">
+                <td>${productData.nombre}</td>
+                <td>${cantidad}</td>
+                <td>$${parseFloat(productData.precio).toFixed(2)}</td>
+                <td>$${subtotal.toFixed(2)}</td>
+                <td>
+                    <input type="hidden" name="items[${rowCounter}][producto_id]" value="${productData.id}">
+                    <input type="hidden" name="items[${rowCounter}][cantidad]" value="${cantidad}">
+                    <input type="hidden" name="items[${rowCounter}][precio]" value="${productData.precio}">
+                    <button type="button" class="btn btn-danger btn-sm remove-item">
+                        <i class="glyphicon glyphicon-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+        $('#items-table tbody').append(newRow);
+        updateTotal();
     }
-     // Restablecer precio unitario y total del item al cambiar tipo
-     itemRow.find('.item-unit-price').val('');
-     itemRow.find('.item-total-price').val('0.00');
-     calculateQuoteTotal(); // Recalcular total de la cotización
-  });
 
-  // Actualizar Precio Unitario y Precio Total Item cuando se selecciona un producto o servicio dinámicamente
-  $(document).on('change', '.item-select', function() {
-    var selectedPrice = $(this).find(':selected').data('price');
-    var itemRow = $(this).closest('.item-row');
-    var itemType = itemRow.find('.item-type').val();
-
-    if(itemType === 'product') {
-      itemRow.find('.item-unit-price').val(selectedPrice);
-    } else if (itemType === 'service') {
-        // Para servicios, el precio unitario en la BD es el costo total del servicio
-        // Podemos mostrarlo como precio unitario o calcularlo directamente
-        // Lo pondremos en Precio Total Item y Precio Unitario si queremos mostrarlo desglosado
-        itemRow.find('.item-unit-price').val(selectedPrice); // Mostrar costo del servicio como precio unitario
-        itemRow.find('.item-quantity').val(1); // Cantidad siempre 1 para servicios
-    }
-     calculateItemTotal(itemRow); // Calcular total del item
-     calculateQuoteTotal(); // Recalcular total de la cotización
-  });
-
-  // Calcular Precio Total Item cuando cambia cantidad, precio unitario o descuento
-  $(document).on('input', '.item-quantity, .item-unit-price, .item-discount', function() {
-     var itemRow = $(this).closest('.item-row');
-     calculateItemTotal(itemRow);
-     calculateQuoteTotal(); // Recalcular total de la cotización
-  });
-
-  // Función para calcular el total de un item
-  function calculateItemTotal(itemRow) {
-    var quantity = parseFloat(itemRow.find('.item-quantity').val()) || 0;
-    var unitPrice = parseFloat(itemRow.find('.item-unit-price').val()) || 0;
-    var discountPercentage = parseFloat(itemRow.find('.item-discount').val()) || 0;
-    var total = quantity * unitPrice;
-    var discountAmount = total * (discountPercentage / 100);
-    var itemTotal = total - discountAmount;
-    itemRow.find('.item-total-price').val(itemTotal.toFixed(2));
-  }
-
-  // Función para calcular el total general de la cotización sumando los totales de los items
-  function calculateQuoteTotal() {
-    var quoteTotal = 0;
-    $('.item-total-price').each(function() {
-      quoteTotal += parseFloat($(this).val()) || 0;
+    // Manejar la selección de kit
+    $('#kit_id').on('change', function() {
+        var kitId = $(this).val();
+        if(kitId) {
+            // Limpiar la tabla actual
+            $('#items-table tbody').empty();
+            rowCounter = 0; // Reiniciar el contador
+            
+            // Hacer la petición AJAX para obtener los productos del kit
+            $.get('get_kit_products.php', {kit_id: kitId}, function(response) {
+                if(response.success) {
+                    // Agregar cada producto del kit a la tabla
+                    response.products.forEach(function(product) {
+                        addProductRow({
+                            id: product.id,
+                            nombre: product.nombre,
+                            precio: product.precio
+                        }, product.cantidad);
+                    });
+                }
+            });
+        }
     });
-     // Si hay un campo de descuento total en el formulario, lo aplicaríamos aquí.
-     // Pero como no existe en naycs.sql -> cotizacion, no lo hacemos.
-     // Si quisiéramos mostrar un total general con descuento en la interfaz, sería solo para visualización.
-  }
 
-  // Eliminar item
-  $(document).on('click', '.remove-item', function() {
-    $(this).closest('.item-row').remove();
-    calculateQuoteTotal(); // Recalcular total de la cotización al eliminar item
-  });
-  
-  // Lógica de guardado de la cotización al enviar el formulario
-  $('form').submit(function(event) {
-      // No prevenir el envío por defecto para que el PHP pueda procesar
-      // Validaciones adicionales si es necesario
-  });
+    // Manejar la adición de items individuales
+    $('#add-item').on('click', function(e) {
+        e.preventDefault();
+        
+        var productId = $('#product_id').val();
+        var cantidad = $('#cantidad').val();
+        
+        if (!productId || !cantidad) {
+            alert('Por favor seleccione un producto y especifique la cantidad');
+            return;
+        }
+        
+        var selectedOption = $('#product_id option:selected');
+        var productData = JSON.parse(selectedOption.attr('data-row'));
+        
+        if (!productData) {
+            alert('Error al obtener datos del producto');
+            return;
+        }
+        
+        addProductRow(productData, parseInt(cantidad));
+        
+        // Limpiar campos
+        $('#product_id').val('');
+        $('#cantidad').val('1');
+    });
 
-  // Procesamiento del formulario en PHP (la lógica de inserción se manejará aquí)
-  <?php
-  if (isset($_POST['add_quote'])) {
-      $session->msg('i', 'Procesando cotización...'); // Mensaje de depuración
+    // Manejar la eliminación de items
+    $(document).on('click', '.remove-item', function() {
+        $(this).closest('tr').remove();
+        updateTotal();
+    });
 
-      $client_id = remove_junk($db->escape($_POST['client_id']));
-      $quote_date = remove_junk($db->escape($_POST['quote_date']));
-      $observations = remove_junk($db->escape($_POST['observations'] ?? ''));
+    // Actualizar el total
+    function updateTotal() {
+        var total = 0;
+        $('#items-table tbody tr').each(function() {
+            var subtotal = parseFloat($(this).find('td:eq(3)').text().replace('$', ''));
+            total += subtotal;
+        });
+        $('#total').text('$' + total.toFixed(2));
+    }
 
-      if (empty($client_id) || empty($quote_date)) {
-          $session->msg('d', 'Faltan campos obligatorios (Cliente, Fecha).');
-          redirect('add_quote.php', false);
-          exit();
-      }
+    // Manejar el envío del formulario
+    $('form').on('submit', function(event) {
+        if ($('#items-table tbody tr').length === 0) {
+            event.preventDefault();
+            alert('Por favor agregue al menos un item a la cotización');
+            return;
+        }
 
-      $query_cotizacion = "INSERT INTO cotizacion (Id_Cliente, Fecha) VALUES ('{$client_id}', '{$quote_date}')";
-      
-      if ($db->query($query_cotizacion)) {
-          $cotizacion_id = $db->insert_id();
-          $session->msg('s', 'Cotización guardada exitosamente.');
+        // Validar cliente
+        if (!$('#cliente_id').val()) {
+            event.preventDefault();
+            alert('Por favor seleccione un cliente');
+            return;
+        }
 
-          // Procesar e insertar items
-          if (isset($_POST['item_type']) && is_array($_POST['item_type'])) {
-              foreach ($_POST['item_type'] as $key => $item_type) {
-                  $product_id = ($item_type === 'product' && isset($_POST['product_id'][$key])) ? $db->escape($_POST['product_id'][$key]) : null;
-                  $service_id = ($item_type === 'service' && isset($_POST['service_id'][$key])) ? $db->escape($_POST['service_id'][$key]) : null;
-                  $quantity = isset($_POST['quantity'][$key]) ? (float)$_POST['quantity'][$key] : 0;
-                  $unit_price = isset($_POST['unit_price'][$key]) ? (float)$_POST['unit_price'][$key] : 0;
-                  $discount = isset($_POST['discount'][$key]) ? (float)$_POST['discount'][$key] : 0;
-
-                  // Calcular precio total del item (cantidad * precio unitario - descuento)
-                  $total_item_price = ($quantity * $unit_price) * (1 - ($discount / 100));
-                  
-                  // Insertar en detalle_cotizacion
-                  $query_detalle = "INSERT INTO detalle_cotizacion (Id_Cotizacion, Id_Producto, Id_Servicio, Precio, Descuento) ";
-                  $query_detalle .= "VALUES ('{$cotizacion_id}', ";
-                  $query_detalle .= "'" . ($product_id !== null ? $product_id : 'NULL') . "', "; // Usar NULL si no es producto
-                  $query_detalle .= "'" . ($service_id !== null ? $service_id : 'NULL') . "', "; // Usar NULL si no es servicio
-                  $query_detalle .= "'{$db->escape($total_item_price)}', '{$db->escape($discount)}')";
-
-                  if (!$db->query($query_detalle)) {
-                      $session->msg('d', 'Error al guardar detalle de item (' . ($item_type === 'product' ? 'Producto' : 'Servicio') . ') para cotización ID: ' . $cotizacion_id);
-                  }
-              }
-          }
-
-          // Si hay observaciones y queremos guardarlas (requiere añadir columna Observaciones a tabla cotizacion)
-          // Si se añade la columna: UPDATE cotizacion SET Observaciones = '{$db->escape($observations)}' WHERE ID = '{$cotizacion_id}';
-
-          redirect('quotes.php', false);
-          exit();
-
-      } else {
-          $session->msg('d', 'Error al guardar la cotización principal.');
-          redirect('add_quote.php', false);
-          exit();
-      }
-  }
-  ?>
-
+        // Validar fecha
+        if (!$('#fecha').val()) {
+            event.preventDefault();
+            alert('Por favor seleccione una fecha');
+            return;
+        }
+    });
 });
 </script>
+
+<!-- Modal para agregar cliente -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1" role="dialog" aria-labelledby="addCustomerModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="addCustomerModalLabel">Agregar Nuevo Cliente</h4>
+            </div>
+            <form method="post" action="add_quote.php">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="nombre">Nombre</label>
+                        <input type="text" class="form-control" name="nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="numero">Teléfono</label>
+                        <input type="text" class="form-control" name="numero" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="correo">Correo</label>
+                        <input type="email" class="form-control" name="correo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="direccion">Dirección</label>
+                        <input type="text" class="form-control" name="direccion" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+                    <button type="submit" name="add_cliente" class="btn btn-primary">Guardar Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para agregar producto -->
+<div class="modal fade" id="addProductModal" tabindex="-1" role="dialog" aria-labelledby="addProductModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="addProductModalLabel">Agregar Nuevo Producto</h4>
+            </div>
+            <form method="post" action="add_quote.php">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="product-title">Nombre del Producto</label>
+                        <input type="text" class="form-control" name="product-title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="product-description">Descripción</label>
+                        <textarea class="form-control" name="product-description" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="product-quantity">Cantidad</label>
+                        <input type="number" class="form-control" name="product-quantity" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="product-price">Precio</label>
+                        <input type="number" class="form-control" name="product-price" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="product-category">Categoría</label>
+                        <select class="form-control" name="product-category" required>
+                            <option value="">Seleccione una categoría</option>
+                            <?php foreach($categorias as $cat): ?>
+                                <option value="<?php echo (int)$cat['ID']; ?>">
+                                    <?php echo remove_junk($cat['Nombre']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+                    <button type="submit" name="add_product" class="btn btn-primary">Guardar Producto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <?php include_once('layouts/footer.php'); ?>
 

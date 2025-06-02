@@ -168,7 +168,8 @@
                          $total += $servicio_costo;
                     }
                     
-                    echo '$' . number_format($total, 2);
+                    // Usar sprintf en lugar de number_format para evitar el aviso de deprecación
+                    echo '$' . sprintf('%.2f', $total);
                   ?>
                 </td>
                 <td><?= $sale_data['Fecha'] ?? ''; ?></td>
@@ -194,18 +195,18 @@
           <?php foreach ($recent_products as $product): ?>
             <a class="list-group-item clearfix" href="edit_product.php?id=<?= (int)$product['ID'];?>">
               <h4 class="list-group-item-heading">
-                <?php if ($product['Foto']): ?>
+                <?php if (isset($product['Foto']) && $product['Foto']): ?>
                   <img class="img-avatar img-circle" src="uploads/products/<?= $product['Foto']; ?>" alt="">
                 <?php else: ?>
                   <img class="img-avatar img-circle" src="uploads/products/no_image.jpg" alt="">
                 <?php endif; ?>
                 <?= remove_junk($product['Nombre']); ?>
                 <span class="label label-warning pull-right">
-                  $<?= number_format($product['Costo'], 2); ?>
+                  $<?= number_format(isset($product['Precio']) ? $product['Precio'] : 0, 2); ?>
                 </span>
               </h4>
               <span class="list-group-item-text pull-right">
-                Stock: <?= (int)$product['Cantidad']; ?>
+                Stock: <?= isset($product['Cantidad']) ? (int)$product['Cantidad'] : 0; ?>
               </span>
             </a>
           <?php endforeach; ?>

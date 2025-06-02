@@ -7,50 +7,53 @@
 <?php
   if(isset($_POST['update_quote'])){
     $quote_id = (int)$_POST['quote_id'];
-    $client_id = $_POST['client_id'] ? (int)$_POST['client_id'] : null;
-    // Si no se selecciona un cliente existente, usar el nombre del cliente del formulario
-    $client_name = null;
-    if(!$client_id && isset($_POST['client_name'])) {
-        $client_name = remove_junk($db->escape($_POST['client_name']));
-    }
+    $client_id = (int)$_POST['client_id'];
+    $quote_date = remove_junk($db->escape($_POST['quote_date']));
+    $observations = remove_junk($db->escape($_POST['observations'] ?? ''));
 
-    $quote_type = remove_junk($db->escape($_POST['quote_type']));
-    $discount_percentage = (float)$_POST['discount_percentage'];
-    $total_amount = (float)$_POST['total_amount'];
-    $observations = remove_junk($db->escape($_POST['observations']));
-
-    // Actualizar la cotización (incluyendo client_name si aplica)
-    $sql = "UPDATE quotes SET 
-            client_id = ". ($client_id ? $client_id : "NULL") .",
-            client_name = ". ($client_name ? "'{$client_name}'" : "NULL") .",
-            quote_type = '{$quote_type}',
-            discount_percentage = {$discount_percentage},
-            total_amount = {$total_amount},
-            observations = '{$observations}'
-            WHERE id = {$quote_id}";
+    // Actualizar la cotización
+    $sql = "UPDATE cotizacion SET 
+            Id_Cliente = {$client_id},
+            Fecha = '{$quote_date}',
+            Observaciones = '{$observations}'
+            WHERE ID = {$quote_id}";
     
     if($db->query($sql)){
       // Eliminar items existentes
-      $sql = "DELETE FROM quote_items WHERE quote_id = {$quote_id}";
+      $sql = "DELETE FROM detalle_cotizacion WHERE Id_Cotizacion = {$quote_id}";
       $db->query($sql);
 
       // Insertar nuevos items
-      if(isset($_POST['product_id']) && is_array($_POST['product_id'])) {
-          $product_ids = $_POST['product_id'];
+      if(isset($_POST['item_type']) && is_array($_POST['item_type'])) {
+          $item_types = $_POST['item_type'];
+          $product_ids = $_POST['product_id'] ?? [];
+          $service_ids = $_POST['service_id'] ?? [];
           $quantities = $_POST['quantity'];
-          $prices = $_POST['price'];
+          $unit_prices = $_POST['unit_price'];
 
-          for($i = 0; $i < count($product_ids); $i++) {
-            // Asegurarse de que los índices existen y los valores no están vacíos para evitar warnings
-            if(isset($product_ids[$i], $quantities[$i], $prices[$i]) && $product_ids[$i] !== '' && $quantities[$i] !== '' && $prices[$i] !== '') {
-              $product_id = (int)$product_ids[$i];
+          for($i = 0; $i < count($item_types); $i++) {
+            if(isset($item_types[$i], $quantities[$i], $unit_prices[$i])) {
+              $item_type = $item_types[$i];
               $quantity = (int)$quantities[$i];
-              $price = (float)$prices[$i];
+              $unit_price = (float)$unit_prices[$i];
+              $total_price = $quantity * $unit_price;
 
-              // Insertar solo product_id por ahora. service_id y otros campos pueden agregarse si es necesario.
-              $sql = "INSERT INTO quote_items (quote_id, product_id, quantity, price) 
-                      VALUES ({$quote_id}, {$product_id}, {$quantity}, {$price})";
-              $db->query($sql);
+              // Determinar si es producto o servicio
+              $product_id = ($item_type === 'product' && isset($product_ids[$i])) ? (int)$product_ids[$i] : null;
+              $service_id = ($item_type === 'service' && isset($service_ids[$i])) ? (int)$service_ids[$i] : null;
+
+              // Insertar en detalle_cotizacion
+              $sql = "INSERT INTO detalle_cotizacion (Id_Cotizacion, Id_Producto, Id_Servicio, Precio) 
+                      VALUES ({$quote_id}, " . 
+                      ($product_id ? $product_id : "NULL") . ", " . 
+                      ($service_id ? $service_id : "NULL") . ", 
+                      {$total_price})";
+              
+              if(!$db->query($sql)) {
+                $session->msg("d", "Error al guardar detalle de item.");
+                redirect('edit_quote.php?id='.$quote_id, false);
+                exit();
+              }
             }
           }
       }
@@ -58,7 +61,7 @@
       $session->msg("s", "Cotización actualizada exitosamente.");
       redirect('quotes.php', false);
     } else {
-      $session->msg("d", "Error al actualizar la cotización: " . $db->con->error);
+      $session->msg("d", "Error al actualizar la cotización.");
       redirect('edit_quote.php?id='.$quote_id, false);
     }
   }

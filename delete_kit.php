@@ -1,35 +1,35 @@
 <?php
   $page_title = 'Eliminar Kit';
   require_once('includes/load.php');
+  // Checkin What level user has permission to view this page
   page_require_level(2);
 ?>
 
 <?php
-  $kit_id = (int)$_GET['id'];
-  if(empty($kit_id)):
+  $kit = find_by_id('kit',(int)$_GET['id']);
+  if(!$kit){
+    $session->msg("d","ID de kit no encontrado.");
     redirect('kits.php');
-  endif;
-  
-  $kit = find_by_id('kits', $kit_id);
-  if(!$kit):
-    redirect('kits.php');
-  endif;
+  }
 ?>
 
 <?php
   if(isset($_POST['delete_kit'])){
-    $query = "DELETE FROM kit_items WHERE kit_id = '{$kit_id}'";
+    $kit_id = (int)$_GET['id'];
+    
+    // Primero eliminar los productos asociados
+    $query = "DELETE FROM kit_producto WHERE Id_Kit = '{$kit_id}'";
+    $db->query($query);
+    
+    // Luego eliminar el kit
+    $query = "DELETE FROM kit WHERE ID = '{$kit_id}'";
+    $db->query($query);
+    
     if($db->query($query)){
-      $query = "DELETE FROM kits WHERE id = '{$kit_id}'";
-      if($db->query($query)){
-        $session->msg("s", "Kit eliminado exitosamente.");
-        redirect('kits.php');
-      } else {
-        $session->msg("d", "Error al eliminar el kit.");
-        redirect('kits.php');
-      }
+      $session->msg("s","Kit eliminado exitosamente.");
+      redirect('kits.php');
     } else {
-      $session->msg("d", "Error al eliminar los productos del kit.");
+      $session->msg("d","Error al eliminar el kit.");
       redirect('kits.php');
     }
   }
@@ -54,11 +54,11 @@
       </div>
       <div class="panel-body">
         <div class="col-md-12">
-          <form method="post" action="delete_kit.php?id=<?php echo $kit_id; ?>" class="clearfix">
+          <form method="post" action="delete_kit.php?id=<?php echo (int)$kit['ID']; ?>">
             <div class="form-group">
               <div class="row">
                 <div class="col-md-12">
-                  <p>¿Está seguro que desea eliminar el kit "<?php echo remove_junk($kit['nombre']); ?>"?</p>
+                  <h4>¿Está seguro que desea eliminar el kit "<?php echo remove_junk($kit['Nombre']); ?>"?</h4>
                   <p>Esta acción no se puede deshacer.</p>
                 </div>
               </div>

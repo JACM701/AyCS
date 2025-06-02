@@ -78,10 +78,10 @@
                     <td><?php echo remove_junk(ucfirst($cat['Nombre'])); ?></td>
                     <td class="text-center">
                       <div class="btn-group">
-                        <a href="edit_categorie.php?id=<?php echo (int)$cat['ID'];?>" class="btn btn-xs btn-warning" data-toggle="tooltip" title="Editar">
+                        <a href="edit_categorie.php?id=<?php echo (int)$cat['ID'];?>" class="btn btn-xs btn-warning" data-toggle="tooltip" title="Editar" onclick="return confirm('¿Está seguro de editar esta categoría?');">
                           <span class="glyphicon glyphicon-edit"></span>
                         </a>
-                        <a href="delete_categorie.php?id=<?php echo (int)$cat['ID'];?>" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Eliminar">
+                        <a href="delete_categorie.php?id=<?php echo (int)$cat['ID'];?>" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Eliminar" onclick="return confirm('¿Está seguro de eliminar esta categoría? Esta acción no se puede deshacer.');">
                           <span class="glyphicon glyphicon-trash"></span>
                         </a>
                       </div>
@@ -100,4 +100,95 @@
     </div>
    </div>
   </div>
-  <?php include_once('layouts/footer.php'); ?>
+
+<style>
+.btn-group .btn {
+  margin: 0 2px;
+}
+
+.btn-xs {
+  padding: 4px 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  border-radius: 3px;
+}
+
+.btn-warning {
+  color: #fff;
+  background-color: #f0ad4e;
+  border-color: #eea236;
+}
+
+.btn-danger {
+  color: #fff;
+  background-color: #d9534f;
+  border-color: #d43f3a;
+}
+
+.btn:hover {
+  opacity: 0.8;
+}
+
+.table > tbody > tr > td {
+  vertical-align: middle;
+}
+
+.panel {
+  border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+}
+
+.panel:hover {
+  box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+}
+
+.panel-heading {
+  background-color: #f8f9fa !important;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.panel-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #283593;
+}
+
+.form-control:focus {
+  border-color: #283593;
+  box-shadow: 0 0 0 0.2rem rgba(40, 53, 147, 0.25);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #283593 0%, #1a237e 100%);
+  border: none;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #1a237e 0%, #0d1642 100%);
+  transform: translateY(-1px);
+}
+</style>
+
+<script>
+$(document).ready(function() {
+  // Inicializar tooltips
+  $('[data-toggle="tooltip"]').tooltip();
+  
+  // Confirmación para editar
+  $('.btn-warning').click(function(e) {
+    if(!confirm('¿Está seguro de editar esta categoría?')) {
+      e.preventDefault();
+    }
+  });
+  
+  // Confirmación para eliminar
+  $('.btn-danger').click(function(e) {
+    if(!confirm('¿Está seguro de eliminar esta categoría? Esta acción no se puede deshacer.')) {
+      e.preventDefault();
+    }
+  });
+});
+</script>
+
+<?php include_once('layouts/footer.php'); ?>

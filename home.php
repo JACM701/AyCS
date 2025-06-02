@@ -1,10 +1,10 @@
 <?php
   // Título de la página
-  $page_title = 'Panel de Control'; // Título más general para el dashboard
+  $page_title = 'Inicio';
   require_once('includes/load.php');
 
-  // Verificar el nivel de permiso del usuario para ver esta página
-  page_require_level(1); // Nivel 1 para admin
+  // Verificar que el usuario tenga el nivel requerido (3 = usuario normal)
+  page_require_level(3);
 
   // Obtener conteos de diferentes entidades (usando nombres de tabla singulares)
   $c_clientes     = count_by_id('cliente');    // Total de clientes
