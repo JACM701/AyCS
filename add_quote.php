@@ -128,17 +128,25 @@ if(isset($_POST['add_quote'])) {
                 // Procesar los items
                 if(isset($_POST['items']) && is_array($_POST['items'])) {
                     foreach($_POST['items'] as $item) {
-                        if(isset($item['producto_id']) && isset($item['cantidad']) && isset($item['precio'])) {
-                            $producto_id = (int)$item['producto_id'];
-                            $cantidad = (int)$item['cantidad'];
-                            $precio = (float)$item['precio'];
-                            
-                            $sql = "INSERT INTO detalle_cotizacion (Id_Cotizacion, Id_Producto, Precio) 
-                                    VALUES ('{$cotizacion_id}', '{$producto_id}', '{$precio}')";
-                            
-                            if(!$db->query($sql)) {
-                                throw new Exception("Error al insertar detalle de cotización");
-                            }
+                        // Validar tipo de item (producto o servicio)
+                        $tipo = isset($item['tipo']) ? $item['tipo'] : 'producto';
+                        $producto_id = isset($item['producto_id']) ? (int)$item['producto_id'] : null;
+                        $servicio_id = isset($item['servicio_id']) ? (int)$item['servicio_id'] : null;
+                        $cantidad = isset($item['cantidad']) ? (int)$item['cantidad'] : 1;
+                        $precio = isset($item['precio']) ? (float)$item['precio'] : 0;
+
+                        if ($tipo === 'producto' && $producto_id) {
+                            $sql = "INSERT INTO detalle_cotizacion (Id_Cotizacion, Id_Producto, Precio) "+
+                                   " VALUES ('{$cotizacion_id}', '{$producto_id}', '{$precio}')";
+                        } elseif ($tipo === 'servicio' && $servicio_id) {
+                            $sql = "INSERT INTO detalle_cotizacion (Id_Cotizacion, Id_Servicio, Precio) "+
+                                   " VALUES ('{$cotizacion_id}', '{$servicio_id}', '{$precio}')";
+                        } else {
+                            continue; // Saltar si no hay datos válidos
+                        }
+
+                        if(!$db->query($sql)) {
+                            throw new Exception("Error al insertar detalle de cotización");
                         }
                     }
                 }
@@ -455,6 +463,35 @@ if(isset($_POST['add_quote'])) {
 $(document).ready(function() {
     let rowCounter = 0; // Contador para filas únicas
     
+    // Función para actualizar los campos del cliente
+    function updateClienteFields(selectedOption) {
+        var telefono = selectedOption.data('telefono') || '';
+        var correo = selectedOption.data('correo') || '';
+        var direccion = selectedOption.data('direccion') || '';
+        
+        console.log('Datos del cliente:', {
+            telefono: telefono,
+            correo: correo,
+            direccion: direccion
+        });
+        
+        $('#cliente_telefono').val(telefono);
+        $('#cliente_correo').val(correo);
+        $('#cliente_direccion').val(direccion);
+    }
+
+    // Inicializar campos cuando se carga la página
+    var initialOption = $('#cliente_id option:selected');
+    if (initialOption.val()) {
+        updateClienteFields(initialOption);
+    }
+
+    // Manejar cambios en el select de cliente
+    $('#cliente_id').on('change', function() {
+        var selectedOption = $(this).find('option:selected');
+        updateClienteFields(selectedOption);
+    });
+
     // Función para agregar una fila de producto
     function addProductRow(productData, cantidad) {
         rowCounter++;

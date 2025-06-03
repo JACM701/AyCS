@@ -60,41 +60,73 @@ if(isset($_POST['edit_quote'])) {
     if(empty($errors)) {
         $cliente_id = (int)$_POST['cliente_id'];
         $fecha = $db->escape($_POST['fecha']);
-        $telefono = $db->escape($_POST['cliente_telefono']);
-        $correo = $db->escape($_POST['cliente_correo']);
-        $direccion = $db->escape($_POST['cliente_direccion']);
+        $telefono = $db->escape($_POST['cliente_telefono'] ?? '');
+        $correo = $db->escape($_POST['cliente_correo'] ?? '');
+        $direccion = $db->escape($_POST['cliente_direccion'] ?? '');
 
-        // Actualizar la cotización
-        $sql = "UPDATE cotizacion SET 
-                Id_Cliente = '{$cliente_id}', 
-                Fecha = '{$fecha}'
-                WHERE ID = '{$quote_id}'";
-        
-        if($db->query($sql)) {
-            // Eliminar items existentes
-            $sql = "DELETE FROM detalle_cotizacion WHERE Id_Cotizacion = '{$quote_id}'";
-            $db->query($sql);
+        // Iniciar transacción
+        $db->query('START TRANSACTION');
+
+        try {
+            // Actualizar la cotización
+            $sql = "UPDATE cotizacion SET 
+                    Id_Cliente = '{$cliente_id}', 
+                    Fecha = '{$fecha}'
+                    WHERE ID = '{$quote_id}'";
             
-            // Procesar los nuevos items
-            if(isset($_POST['items']) && is_array($_POST['items'])) {
-                foreach($_POST['items'] as $item) {
-                    $item_id = (int)$item['id'];
-                    $tipo = $db->escape($item['tipo']);
-                    $precio = (float)$item['precio'];
-                    
-                    $sql = "INSERT INTO detalle_cotizacion (Id_Cotizacion, 
-                            " . ($tipo == 'producto' ? "Id_Producto" : "Id_Servicio") . ", 
-                            Precio) 
-                            VALUES ('{$quote_id}', '{$item_id}', '{$precio}')";
-                    
-                    $db->query($sql);
+            if($db->query($sql)) {
+                // Eliminar items existentes
+                $sql = "DELETE FROM detalle_cotizacion WHERE Id_Cotizacion = '{$quote_id}'";
+                $db->query($sql);
+                
+                // Procesar los nuevos items
+                if(isset($_POST['items']) && is_array($_POST['items'])) {
+                    foreach($_POST['items'] as $item) {
+                        // Validar que los campos requeridos existan
+                        if(!isset($item['id']) || !isset($item['tipo']) || !isset($item['precio'])) {
+                            continue; // Saltar items inválidos
+                        }
+
+                        $item_id = (int)$item['id'];
+                        $tipo = $db->escape($item['tipo']);
+                        $precio = (float)$item['precio'];
+                        
+                        // Construir la consulta según el tipo de item
+                        if($tipo === 'producto') {
+                            $sql = "INSERT INTO detalle_cotizacion (Id_Cotizacion, Id_Producto, Precio) 
+                                   VALUES ('{$quote_id}', '{$item_id}', '{$precio}')";
+                        } elseif($tipo === 'servicio') {
+                            // Verificar que el servicio existe antes de insertar
+                            $check_service = "SELECT ID FROM servicio WHERE ID = '{$item_id}'";
+                            $service_exists = $db->query($check_service);
+                            
+                            if($db->num_rows($service_exists) > 0) {
+                                $sql = "INSERT INTO detalle_cotizacion (Id_Cotizacion, Id_Servicio, Precio) 
+                                       VALUES ('{$quote_id}', '{$item_id}', '{$precio}')";
+                            } else {
+                                throw new Exception("El servicio con ID {$item_id} no existe");
+                            }
+                        } else {
+                            continue; // Saltar si el tipo no es válido
+                        }
+                        
+                        if(!$db->query($sql)) {
+                            throw new Exception("Error al insertar detalle de item");
+                        }
+                    }
                 }
+                
+                // Confirmar transacción
+                $db->query('COMMIT');
+                $session->msg('s', "Cotización actualizada exitosamente.");
+                redirect('quotes.php', false);
+            } else {
+                throw new Exception("Error al actualizar la cotización");
             }
-            
-            $session->msg('s', "Cotización actualizada exitosamente.");
-            redirect('quotes.php', false);
-        } else {
-            $session->msg('d', "Error al actualizar la cotización.");
+        } catch (Exception $e) {
+            // Revertir transacción en caso de error
+            $db->query('ROLLBACK');
+            $session->msg('d', "Error al actualizar la cotización: " . $e->getMessage());
             redirect('edit_quote.php?id='.$quote_id, false);
         }
     } else {
@@ -364,17 +396,17 @@ if(isset($_POST['edit_quote'])) {
 
 <script>
 $(document).ready(function() {
-    // Función para actualizar los campos del cliente
+    // Función para actualizar campos del cliente
     function updateClienteFields(selectedOption) {
-        $('#cliente_telefono').val(selectedOption.data('telefono'));
-        $('#cliente_correo').val(selectedOption.data('correo'));
-        $('#cliente_direccion').val(selectedOption.data('direccion'));
-    }
-
-    // Inicializar campos cuando se carga la página
-    var initialOption = $('#cliente_id option:selected');
-    if (initialOption.val()) {
-        updateClienteFields(initialOption);
+        if(selectedOption.length) {
+            $('#cliente_telefono').val(selectedOption.data('telefono') || '');
+            $('#cliente_correo').val(selectedOption.data('correo') || '');
+            $('#cliente_direccion').val(selectedOption.data('direccion') || '');
+        } else {
+            $('#cliente_telefono').val('');
+            $('#cliente_correo').val('');
+            $('#cliente_direccion').val('');
+        }
     }
 
     // Manejar cambios en el select de cliente
@@ -382,6 +414,10 @@ $(document).ready(function() {
         var selectedOption = $(this).find('option:selected');
         updateClienteFields(selectedOption);
     });
+
+    // Inicializar campos del cliente al cargar la página
+    var initialSelectedOption = $('#cliente_id option:selected');
+    updateClienteFields(initialSelectedOption);
 
     // Manejar la adición de items
     $('#add-item').click(function() {

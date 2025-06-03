@@ -21,8 +21,8 @@
       $address = remove_junk($db->escape($_POST['customer-address']));
 
       $query  = "UPDATE clientes SET ";
-      $query .= "Nombre='{$name}', Numero='{$phone}', Correo='{$email}', Direccion='{$address}'";
-      $query .= " WHERE ID='{$customer['ID']}'";
+      $query .= "Nombre='{$name}', Número='{$phone}', Correo='{$email}', Dirección='{$address}'";
+      $query .= " WHERE Id_Cliente='{$customer['Id_Cliente']}'";
       
       if($db->query($query)){
         $session->msg('s',"Cliente actualizado exitosamente.");
@@ -52,7 +52,7 @@
       </div>
       <div class="panel-body">
         <div class="col-md-12">
-          <form method="post" action="edit_customer.php?id=<?php echo (int)$customer['ID'] ?>" class="clearfix">
+          <form method="post" action="edit_customer.php?id=<?php echo (int)$customer['Id_Cliente'] ?>" class="clearfix">
             <div class="form-group">
               <div class="input-group">
                 <span class="input-group-addon">
@@ -66,7 +66,7 @@
                 <span class="input-group-addon">
                  <i class="glyphicon glyphicon-phone"></i>
                 </span>
-                <input type="text" class="form-control" name="customer-phone" value="<?php echo remove_junk($customer['Numero']); ?>" required>
+                <input type="text" class="form-control" name="customer-phone" value="<?php echo remove_junk($customer['Número']); ?>" required>
               </div>
             </div>
             <div class="form-group">
@@ -82,7 +82,7 @@
                 <span class="input-group-addon">
                  <i class="glyphicon glyphicon-home"></i>
                 </span>
-                <input type="text" class="form-control" name="customer-address" value="<?php echo remove_junk($customer['Direccion']); ?>" required>
+                <input type="text" class="form-control" name="customer-address" value="<?php echo remove_junk($customer['Dirección']); ?>" required>
               </div>
             </div>
             <button type="submit" name="edit_customer" class="btn btn-danger">Actualizar Cliente</button>

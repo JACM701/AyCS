@@ -14,7 +14,7 @@
       $address = remove_junk($db->escape($_POST['customer-address']));
 
       $query  = "INSERT INTO clientes (";
-      $query .=" Nombre, Numero, Correo, Direccion";
+      $query .=" Nombre, Número, Correo, Dirección";
       $query .=") VALUES (";
       $query .=" '{$name}', '{$phone}', '{$email}', '{$address}'";
       $query .=")";

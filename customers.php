@@ -2,7 +2,7 @@
   require_once('includes/load.php');
   page_require_level(2);
 
-  $all_customers = find_all('cliente');
+  $all_customers = find_all('clientes');
 ?>
 <?php include_once('layouts/header.php'); ?>
 
@@ -36,15 +36,15 @@
             <tr>
               <td class="text-center"><?php echo count_id();?></td>
               <td><?php echo remove_junk($customer['Nombre']); ?></td>
-              <td><?php echo remove_junk($customer['Numero']); ?></td>
+              <td><?php echo remove_junk($customer['Número']); ?></td>
               <td><?php echo remove_junk($customer['Correo']); ?></td>
-              <td><?php echo remove_junk($customer['Direccion']); ?></td>
+              <td><?php echo remove_junk($customer['Dirección']); ?></td>
               <td class="text-center">
                 <div class="btn-group">
-                  <a href="edit_customer.php?id=<?php echo (int)$customer['ID'];?>" class="btn btn-xs btn-warning" data-toggle="tooltip" title="Editar">
+                  <a href="edit_customer.php?id=<?php echo (int)$customer['Id_Cliente'];?>" class="btn btn-xs btn-warning" data-toggle="tooltip" title="Editar">
                     <i class="glyphicon glyphicon-pencil"></i>
                   </a>
-                  <a href="delete_customer.php?id=<?php echo (int)$customer['ID'];?>" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Eliminar">
+                  <a href="delete_customer.php?id=<?php echo (int)$customer['Id_Cliente'];?>" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Eliminar">
                     <i class="glyphicon glyphicon-trash"></i>
                   </a>
                 </div>
