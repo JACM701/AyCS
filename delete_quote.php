@@ -12,12 +12,31 @@
   }
 ?>
 <?php
-  $delete_id = delete_by_id('cotizacion',(int)$quote['ID']);
-  if($delete_id){
-      $session->msg("s","Cotización eliminada.");
-      redirect('quotes.php');
-  } else {
-      $session->msg("d","Error al eliminar la cotización.");
-      redirect('quotes.php');
+  // Iniciar transacción
+  $db->query('START TRANSACTION');
+  
+  try {
+    // Primero eliminar los registros relacionados en detalle_cotizacion
+    $sql = "DELETE FROM detalle_cotizacion WHERE Id_Cotizacion = '{$quote['ID']}'";
+    if(!$db->query($sql)) {
+      throw new Exception("Error al eliminar los detalles de la cotización");
+    }
+    
+    // Luego eliminar la cotización principal
+    $sql = "DELETE FROM cotizacion WHERE ID = '{$quote['ID']}'";
+    if(!$db->query($sql)) {
+      throw new Exception("Error al eliminar la cotización");
+    }
+    
+    // Si todo salió bien, confirmar la transacción
+    $db->query('COMMIT');
+    $session->msg("s","Cotización eliminada exitosamente.");
+    redirect('quotes.php');
+    
+  } catch (Exception $e) {
+    // Si hubo algún error, revertir la transacción
+    $db->query('ROLLBACK');
+    $session->msg("d","Error al eliminar la cotización: " . $e->getMessage());
+    redirect('quotes.php');
   }
 ?> 

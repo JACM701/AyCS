@@ -136,10 +136,10 @@ if(isset($_POST['add_quote'])) {
                         $precio = isset($item['precio']) ? (float)$item['precio'] : 0;
 
                         if ($tipo === 'producto' && $producto_id) {
-                            $sql = "INSERT INTO detalle_cotizacion (Id_Cotizacion, Id_Producto, Precio) "+
+                            $sql = "INSERT INTO detalle_cotizacion (Id_Cotizacion, Id_Producto, Precio) " .
                                    " VALUES ('{$cotizacion_id}', '{$producto_id}', '{$precio}')";
                         } elseif ($tipo === 'servicio' && $servicio_id) {
-                            $sql = "INSERT INTO detalle_cotizacion (Id_Cotizacion, Id_Servicio, Precio) "+
+                            $sql = "INSERT INTO detalle_cotizacion (Id_Cotizacion, Id_Servicio, Precio) " .
                                    " VALUES ('{$cotizacion_id}', '{$servicio_id}', '{$precio}')";
                         } else {
                             continue; // Saltar si no hay datos válidos
